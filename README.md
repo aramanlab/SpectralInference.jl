@@ -13,7 +13,7 @@ dev git@github.com:aramanlab/SPI.jl.git
 
 ## Example
 
-```
+```julia
 using SPI
 
 M = rand(100, 100)
