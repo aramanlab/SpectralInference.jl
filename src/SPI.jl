@@ -1,10 +1,12 @@
 module SPI
 
 using Reexport
-using Distances
 using StatsBase
+using Distances
 using Clustering
 using LinearAlgebra
+using FreqTables: freqtable
+using CategoricalArrays: cut
 
 @reexport using LinearAlgebra
 @reexport using Clustering: hclust
@@ -17,5 +19,8 @@ include("core.jl")
 export zscore, scaledcumsum,
     minspaceneeded, spimtx_spaceneeded
 include("helpers.jl")
+
+export empericalMI, adjustedrandindex, vmeasure_homogeneity_completeness
+include("empericalMI.jl")
 
 end
