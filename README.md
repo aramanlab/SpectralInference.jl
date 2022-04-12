@@ -1,4 +1,4 @@
-# SPI
+# Spectral Phylogenetic Inference (SPI)
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://aramanlab.github.io/SPI.jl/stable)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://aramanlab.github.io/SPI.jl/dev)
@@ -7,9 +7,12 @@
 
 ## Install
 
+type:
+
+```julia-repl
+] dev git@github.com:aramanlab/SPI.jl.git
 ```
-dev git@github.com:aramanlab/SPI.jl.git
-```
+into the julia command line
 
 ## Example
 
