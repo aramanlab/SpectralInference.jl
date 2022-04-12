@@ -31,3 +31,18 @@ minspaceneeded(n,p; bits=64) = Base.format_bytes(binomial(n,2) * p * bits)
 how much memory is needed to store SPI distance matrix
 """
 spimtx_spaceneeded(n; bits=64) = Base.format_bytes(n^2 * bits)
+
+
+"""
+    pairwise(func::Function, m::M) where M<:AbstractMatrix
+
+returns upper offdiagonals of `res[k] = func(i, j)` where `(k, (i,j))` 
+are calculated from `enumerate(combinations(1:size(m,2), 2))`
+"""
+function pairwise(func::Function, m::M) where M<:AbstractMatrix
+    result = zeros(binomial(size(m,2),2))
+    for (k, (i,j)) in enumerate(combinations(1:size(m,2), 2))
+        result[k] = func(m[:,i], m[:,j])
+    end
+    return result
+end
