@@ -66,8 +66,8 @@ function _nwstr(merges::A, heights::B, i::C, p::C, tiplabels::D)::String where {
         A<:AbstractArray{<:Integer}, B<:AbstractVector{<:AbstractFloat},
         C<:Integer, D<:AbstractVector{<:AbstractString}
     }
-    j::Int64 = hc.merges[i,1] # left subtree pointer
-    k::Int64 = hc.merges[i,2] # right subtree pointer
+    j::Int64 = merges[i,1] # left subtree pointer
+    k::Int64 = merges[i,2] # right subtree pointer
     a::String = if j < 0 # if tip format tip
             tiplabels[abs(j)] * ':' * @sprintf("%e", heights[i])
         else # recurse and format internal node
