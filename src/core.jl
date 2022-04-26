@@ -113,6 +113,21 @@ function calc_spi_trace(usv::SVD, taxaidxs; alpha=1.5, q=.75)
 end
 
 """
+    calc_spi_tree(A[, ids])
+helper function that immediately returns the newick tree string inferred by SPI
+"""
+function calc_spi_tree(A)
+    dij = calc_spi_mtx(A)
+    hc = hclust(dij, linkage=:average, branchorder=:optimal)
+    nwstr(hc)
+end
+function calc_spi_tree(A, ids)
+    dij = calc_spi_mtx(A)
+    hc = hclust(dij, linkage=:average, branchorder=:optimal)
+    nwstr(hc, ids)
+end
+
+"""
     projectinLSV(data::Array{T}, usv::SVD{T}, [window])
 
 returns estimated left singular vectors (aka: LSV or Û) for new data based on already calculated SVD factorization
