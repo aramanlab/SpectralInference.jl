@@ -47,6 +47,7 @@ function pairwise(func::Function, m::M) where M<:AbstractMatrix
     return result
 end
 
+
 """ 
     nwstr(hc::Hclust[, tiplabels::Vector[<:String]])
 
@@ -68,17 +69,17 @@ function _nwstr(merges::A, heights::B, i::C, p::C, tiplabels::D)::String where {
     j::Int64 = hc.merges[i,1] # left subtree pointer
     k::Int64 = hc.merges[i,2] # right subtree pointer
     a::String = if j < 0 # if tip format tip
-            tiplabels[abs(j)] * ':' * string(round(heights[i], digits=5))
+            tiplabels[abs(j)] * ':' * @sprintf("%e", heights[i])
         else # recurse and format internal node
             _nwstr(view(merges, :, :), view(heights, :), j, i, view(tiplabels, :))
         end
     b::String = if k < 0 # if tip format tip
-            tiplabels[abs(k)] * ':' * string(round(heights[i], digits=5))
+            tiplabels[abs(k)] * ':' * @sprintf("%e", heights[i])
         else # recurse and format internal node
             _nwstr(view(merges, :, :), view(heights, :), k, i, view(tiplabels, :))
         end
     nid = "node" * string(length(heights) + i + 1)
-    dist = string(round(heights[p] - heights[i], digits=5))
+    dist = @sprintf("%e", heights[p] - heights[i])
     _newick_merge_strings(a,b,nid,dist)
 end
 function _newick_merge_strings(a::S, b::S, n::S, d::S) where S<:String

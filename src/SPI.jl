@@ -1,6 +1,7 @@
 module SPI
 
 using Reexport
+using Printf
 using StatsBase
 using Distances
 using Clustering
