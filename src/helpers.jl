@@ -46,3 +46,41 @@ function pairwise(func::Function, m::M) where M<:AbstractMatrix
     end
     return result
 end
+
+""" 
+    nwstr(hc::Hclust[, tiplabels::Vector[<:String]])
+
+convert Hclust to newick tree string
+Args:
+* hc, `Hclust` object from Clustering package
+* tiplabels, `Vector{<:String}` names in same order as distance matrix
+"""
+nwstr(hc::Hclust) = nwstr(hc, string.(1:length(hc.order)))
+nwstr(hc::Hclust, tiplabels::Vector{<:Symbol}) = nwstr(hc, string.(tiplabels))
+function nwstr(hc::Hclust, tiplabels::Vector{<:String})
+    r = length(hc.heights)
+    _nwstr(view(hc.merges, :, :), view(hc.heights, :), r, r, view(tiplabels, :)) * ";"
+end
+function _nwstr(merges::A, heights::B, i::C, p::C, tiplabels::D)::String where {
+        A<:AbstractArray{<:Integer}, B<:AbstractVector{<:AbstractFloat},
+        C<:Integer, D<:AbstractVector{<:AbstractString}
+    }
+    j::Int64 = hc.merges[i,1] # left subtree pointer
+    k::Int64 = hc.merges[i,2] # right subtree pointer
+    a::String = if j < 0 # if tip format tip
+            tiplabels[abs(j)] * ':' * string(round(heights[i], digits=5))
+        else # recurse and format internal node
+            _nwstr(view(merges, :, :), view(heights, :), j, i, view(tiplabels, :))
+        end
+    b::String = if k < 0 # if tip format tip
+            tiplabels[abs(k)] * ':' * string(round(heights[i], digits=5))
+        else # recurse and format internal node
+            _nwstr(view(merges, :, :), view(heights, :), k, i, view(tiplabels, :))
+        end
+    nid = "node" * string(length(heights) + i + 1)
+    dist = string(round(heights[p] - heights[i], digits=5))
+    _newick_merge_strings(a,b,nid,dist)
+end
+function _newick_merge_strings(a::S, b::S, n::S, d::S) where S<:String
+    '(' *  a *  ',' * b * ')' * n * ':' * d
+end

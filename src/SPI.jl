@@ -16,8 +16,8 @@ export getintervals, calc_spi_mtx, calc_spi_trace,
     projectinLSV, projectinRSV, projectout
 include("core.jl")
 
-export zscore, scaledcumsum,
-    minspaceneeded, spimtx_spaceneeded
+export zscore, scaledcumsum, nwstr
+    minspaceneeded, spimtx_spaceneeded,
 include("helpers.jl")
 
 export empericalMI, adjustedrandindex, vmeasure_homogeneity_completeness
