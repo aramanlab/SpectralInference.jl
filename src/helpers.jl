@@ -56,13 +56,13 @@ Args:
 * hc, `Hclust` object from Clustering package
 * tiplabels, `Vector{<:String}` names in same order as distance matrix
 """
-nwstr(hc::Hclust) = nwstr(hc, string.(1:length(hc.order)))
-nwstr(hc::Hclust, tiplabels::Vector{<:Symbol}) = nwstr(hc, string.(tiplabels))
-function nwstr(hc::Hclust, tiplabels::Vector{<:String})
+nwstr(hc::Hclust; labelinternalnodes=true) = nwstr(hc, string.(1:length(hc.order)); labelinternalnodes)
+nwstr(hc::Hclust, tiplabels::Vector{<:Symbol}; labelinternalnodes=true) = nwstr(hc, string.(tiplabels); labelinternalnodes)
+function nwstr(hc::Hclust, tiplabels::Vector{<:String}; labelinternalnodes=true)
     r = length(hc.heights)
-    _nwstr(view(hc.merges, :, :), view(hc.heights, :), r, r, view(tiplabels, :)) * ";"
+    _nwstr(view(hc.merges, :, :), view(hc.heights, :), r, r, view(tiplabels, :); labelinternalnodes) * ";"
 end
-function _nwstr(merges::A, heights::B, i::C, p::C, tiplabels::D)::String where {
+function _nwstr(merges::A, heights::B, i::C, p::C, tiplabels::D; labelinternalnodes=true)::String where {
         A<:AbstractArray{<:Integer}, B<:AbstractVector{<:AbstractFloat},
         C<:Integer, D<:AbstractVector{<:AbstractString}
     }
@@ -71,14 +71,14 @@ function _nwstr(merges::A, heights::B, i::C, p::C, tiplabels::D)::String where {
     a::String = if j < 0 # if tip format tip
             tiplabels[abs(j)] * ':' * @sprintf("%e", heights[i])
         else # recurse and format internal node
-            _nwstr(view(merges, :, :), view(heights, :), j, i, view(tiplabels, :))
+            _nwstr(view(merges, :, :), view(heights, :), j, i, view(tiplabels, :); labelinternalnodes)
         end
     b::String = if k < 0 # if tip format tip
             tiplabels[abs(k)] * ':' * @sprintf("%e", heights[i])
         else # recurse and format internal node
-            _nwstr(view(merges, :, :), view(heights, :), k, i, view(tiplabels, :))
+            _nwstr(view(merges, :, :), view(heights, :), k, i, view(tiplabels, :); labelinternalnodes)
         end
-    nid = "node" * string(length(heights) + i + 1)
+    nid = labelinternalnodes ? "node" * string(length(heights) + i + 1) : ""
     dist = @sprintf("%e", heights[p] - heights[i])
     _newick_merge_strings(a,b,nid,dist)
 end

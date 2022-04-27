@@ -113,18 +113,18 @@ function calc_spi_trace(usv::SVD, taxaidxs; alpha=1.5, q=.75)
 end
 
 """
-    calc_spi_tree(A[, ids])
+    calc_spi_tree(A[, ids; labelinternalnodes=true])
 helper function that immediately returns the newick tree string inferred by SPI
 """
-function calc_spi_tree(A)
+function calc_spi_tree(A; labelinternalnodes=true)
     dij = calc_spi_mtx(A)
     hc = hclust(dij, linkage=:average, branchorder=:optimal)
-    nwstr(hc)
+    nwstr(hc; labelinternalnodes)
 end
-function calc_spi_tree(A, ids)
+function calc_spi_tree(A, ids; labelinternalnodes=true)
     dij = calc_spi_mtx(A)
     hc = hclust(dij, linkage=:average, branchorder=:optimal)
-    nwstr(hc, ids)
+    nwstr(hc, ids; labelinternalnodes)
 end
 
 """
