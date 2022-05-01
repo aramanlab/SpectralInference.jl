@@ -5,6 +5,9 @@ struct SPIResult{T}
     spitree::Hclust
 end
 
+struct LSVs end
+struct RSVs end
+
 """
     spiresult(A::Matrix{<:Number})
 
@@ -48,6 +51,9 @@ end
 """
     calc_spi_mtx(A::Matrix; [Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.5, q=.75])
     calc_spi_mtx(usv::SVD; [Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.5, q=.75])
+    calc_spi_mtx(usv::SVD[, SPI.LSVs(); Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.5, q=.75])
+    calc_spi_mtx(usv::SVD[, SPI.RSVs(); Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.5, q=.75])
+
 
 computes the cumulative spectral residual distance for spectral phylogenetic inference
 
@@ -57,19 +63,23 @@ where ``P`` are the spectral partitions found with `getintervals`.
 
 Args:
 * A,usv = Matrix or SVD factorization (Matrix is just passed to `svd()` before calculation)
+* SPI.Left() computes SPI matrix for LSVs; SPI.Right() computes SPI Matrix for RSVs
 * alpha, q are passed to `getintervals()` see its documentation
 
 Returns:
 * distance matrix
 """
-function calc_spi_mtx(A::Matrix{<:Number}; alpha=1.5, q=.75)
-    calc_spi_mtx(svd(A); alpha=alpha, q=q)
-end
+calc_spi_mtx(A::Matrix{<:Number}; alpha=1.5, q=.75) = calc_spi_mtx(svd(A); alpha, q)
+calc_spi_mtx(A::Matrix{<:Number}, ::LSVs; alpha=1.5, q=.75) = calc_spi_mtx(svd(A), LSVs(); alpha, q)
+calc_spi_mtx(A::Matrix{<:Number}, ::RSVs; alpha=1.5, q=.75) = calc_spi_mtx(svd(A), RSVs(); alpha, q)
 
-function calc_spi_mtx(usv::SVD; alpha=1.5, q=.75)
-    sprmtx = zeros(size(usv.U,1), size(usv.U,1))
-    for grp in getintervals(usv.S, alpha=alpha, q=q)
-        sprmtx += Distances.pairwise(WeightedEuclidean(usv.S[grp]), usv.U'[grp,:])
+calc_spi_mtx(usv::SVD; alpha=1.5, q=.75) = calc_spi_mtx(usv, LSVs(); alpha, q)
+calc_spi_mtx(usv::SVD, ::LSVs; alpha=1.5, q=.75) = calc_spi_mtx(usv.U, usv.S; alpha, q)
+calc_spi_mtx(usv::SVD, ::RSVs; alpha=1.5, q=.75) = calc_spi_mtx(Matrix(usv.V), usv.S; alpha, q)
+function calc_spi_mtx(vecs::Matrix{<:T}, vals::Vector{<:T}; alpha=1.5, q=.75) where T<:Number
+    sprmtx = zeros(size(vecs,1), size(vecs,1))
+    for grp in getintervals(vals, alpha=alpha, q=q)
+        sprmtx += Distances.pairwise(WeightedEuclidean(vals[grp]), vecs'[grp,:])
     end
     return sprmtx.^2
 end
