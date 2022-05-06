@@ -24,4 +24,6 @@ include("helpers.jl")
 export empericalMI, adjustedrandindex, vmeasure_homogeneity_completeness
 include("empericalMI.jl")
 
+include("parsephylip.jl")
+
 end
