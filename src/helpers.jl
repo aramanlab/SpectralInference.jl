@@ -49,16 +49,16 @@ end
 
 
 """ 
-    nwstr(hc::Hclust[, tiplabels::Vector[<:String]])
+    nwstr(hc::Hclust[, tiplabels::AbstractVector[<:String]])
 
 convert Hclust to newick tree string
 Args:
 * hc, `Hclust` object from Clustering package
-* tiplabels, `Vector{<:String}` names in same order as distance matrix
+* tiplabels, `AbstractVector{<:String}` names in same order as distance matrix
 """
 nwstr(hc::Hclust; labelinternalnodes=true) = nwstr(hc, string.(1:length(hc.order)); labelinternalnodes)
-nwstr(hc::Hclust, tiplabels::Vector{<:Symbol}; labelinternalnodes=true) = nwstr(hc, string.(tiplabels); labelinternalnodes)
-function nwstr(hc::Hclust, tiplabels::Vector{<:String}; labelinternalnodes=true)
+nwstr(hc::Hclust, tiplabels::AbstractVector{<:Symbol}; labelinternalnodes=true) = nwstr(hc, string.(tiplabels); labelinternalnodes)
+function nwstr(hc::Hclust, tiplabels::AbstractVector{<:String}; labelinternalnodes=true)
     r = length(hc.heights)
     _nwstr(view(hc.merges, :, :), view(hc.heights, :), r, r, view(tiplabels, :); labelinternalnodes) * ";"
 end

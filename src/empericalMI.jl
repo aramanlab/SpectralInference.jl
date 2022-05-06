@@ -1,7 +1,7 @@
 ### MI functions ###
 
 """
-    empiricalMI(a::Vector{<:Float}, b::Vector{<:Float}[, nbins=50, normalize=false])
+    empiricalMI(a::AbstractVector{<:Float}, b::AbstractVector{<:Float}[, nbins=50, normalize=false])
 
 computes empirical MI from identity of ``H(a) + H(b) - H(a,b)``. where
 ``H := -sum(p(x)*log(p(x))) + log(Δ)``
@@ -11,14 +11,14 @@ We recommend choosing the `sqrt(mean(1000, samplesize))` for `nbins` argument, o
 
 Args:
 * a, vecter of length N
-* b, vector of length N
+* b, AbstractVector of length N
 * nbins, number of bins per side, use 1000 < nbins^2 < length(a) for best results
 * normalize, bool, whether to normalize with mi / mean(ha, hb)
 
 Returns:
 * MI
 """
-function empiricalMI(a::Vector{T}, b::Vector{T}; nbins=50, normalize=false) where T<:AbstractFloat
+function empiricalMI(a::AbstractVector{T}, b::AbstractVector{T}; nbins=50, normalize=false) where T<:AbstractFloat
 
     # num samples marginal then total
     N = length(a)
@@ -49,7 +49,7 @@ function empiricalMI(a::Vector{T}, b::Vector{T}; nbins=50, normalize=false) wher
 end
 
 # value grouped by binary catagory
-function empiricalMI(ab::Vector{F}, mask::M; nbins=100, normalize=false) where {F <: Number, M <: Union{BitVector, Vector{Bool}}}
+function empiricalMI(ab::AbstractVector{F}, mask::M; nbins=100, normalize=false) where {F <: Number, M <: Union{BitVector, AbstactVector{<:Bool}}}
     length(ab) == length(mask) ||
         throw(ArgumentError("length of vals and meta must match; got vals=$(length(vals)), meta=$(length(meta))"))
     # num samples marginal then total
@@ -90,14 +90,14 @@ function empiricalMI(ab::Vector{F}, mask::M; nbins=100, normalize=false) where {
 end
 
 # value grouped by multiple categories
-function empiricalMI(a::Vector{V}, b::Vector{M}; nbins=100) where {V <: AbstractFloat,  M <: Union{Integer, AbstractString}}
+function empiricalMI(a::AbstractVector{V}, b::AbstractVector{M}; nbins=100) where {V <: AbstractFloat,  M <: Union{Integer, AbstractString}}
     binned_a, a_bw = _bin_numbers(a, nbins)
     empiricalMI(binned_a, b; bw_a=a_bw)
 end
 
 # discrete catagories
 empiricalMI(a::BitVector, b::BitVector) = empiricalMI(Int.(a), Int.(b))
-function empiricalMI(a::Vector{T}, b::Vector{V}; bw_a=1., bw_b=1., normalize=false) where {T <: Union{Integer,Bool,AbstractString}, V <: Union{Integer,Bool,AbstractString}}
+function empiricalMI(a::AbstractVector{T}, b::AbstractVector{V}; bw_a=1., bw_b=1., normalize=false) where {T <: Union{Integer,Bool,AbstractString}, V <: Union{Integer,Bool,AbstractString}}
     counts = freqtable(a, b)
     N = sum(counts)
     Ha = entropy(sum(counts, dims=2)./N) + log(bw_a)
@@ -108,9 +108,9 @@ function empiricalMI(a::Vector{T}, b::Vector{V}; bw_a=1., bw_b=1., normalize=fal
 end
 
 
-_bin_numbers(v::Vector{<:AbstractString}, nbins) = v, 1.
-_bin_numbers(v::Vector{<:Integer}, nbins) = string.(v), 1.
-function _bin_numbers(v::Vector{<:Number}, nbins)
+_bin_numbers(v::AbstractVector{<:AbstractString}, nbins) = v, 1.
+_bin_numbers(v::AbstractVector{<:Integer}, nbins) = string.(v), 1.
+function _bin_numbers(v::AbstractVector{<:Number}, nbins)
     breaks = range(minimum(v), maximum(v), length=nbins)
     delta = breaks[2] - breaks[1]
     binned_v = cut(v, breaks; extend=true)
@@ -161,7 +161,7 @@ function vmeasure_homogeneity_completeness(labels_true, labels_pred; β=1.)
 end
 
 """
-    adjustedrandindex(a::Vector{<:Number}, b::Vector{<:Number}; nbins=50)
+    adjustedrandindex(a::AbstractVector{<:Number}, b::AbstractVector{<:Number}; nbins=50)
 
 Args:
 * a, vector of numbers
@@ -169,7 +169,7 @@ Args:
 * nbins, for continuous approximates discrete, for discrete choose nbins>max_number_of_classes
 
 """
-function adjustedrandindex(a::Vector{<:Number}, b::Vector{<:Number}; nbins=50)
+function adjustedrandindex(a::AbstractVector{<:Number}, b::AbstractVector{<:Number}; nbins=50)
 
     # num samples marginal then total
     N = length(a)

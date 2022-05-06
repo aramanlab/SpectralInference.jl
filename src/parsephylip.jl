@@ -1,13 +1,10 @@
-using DataFrames
-using StatsBase
-using SparseArrays
 
 """
     readphylip(fn::String)
 
 Read phylip alignment file, return dataframe of IDs and Sequences
 """
-function readphylip(fn::String)
+function readphylip(fn::AbstractString)
     smps, seqs = open(fn, "r") do reader
         nsmp, nfeat = parse.(Int, split(readline(reader)))
         smps = Vector()
@@ -27,7 +24,7 @@ end # read phylip
 
 
 
-onehotencode(seqs::Vector{<:AbstractString}) = onehotencode(_stringcolumntocharmtx(seqs))
+onehotencode(seqs::AbstractVector{<:AbstractString}) = onehotencode(_stringcolumntocharmtx(seqs))
 function onehotencode(df::D) where D<:AbstractDataFrame
     ohedf = spzeros(size(df,1), 0)
     origsize=size(df,2)
@@ -40,7 +37,7 @@ function onehotencode(df::D, col, cate = sort(unique(df[!, col])); outnames = Sy
     select(df, @. col => ByRow(isequal(cate)) .=> outnames)
 end
 
-function onehotencode(chardf::Matrix{<:Char})
+function onehotencode(chardf::AbstractMatrix{<:Char})
     ohemtx = Vector()
     for col in eachcol(chardf)
         push!(ohemtx, indicatormat(col)')

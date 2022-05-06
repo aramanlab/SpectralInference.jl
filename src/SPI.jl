@@ -3,6 +3,8 @@ module SPI
 using Reexport
 using Printf
 using StatsBase
+using SparseArrays
+using DataFrames
 using Distances
 using Clustering
 using LinearAlgebra

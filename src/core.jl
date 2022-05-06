@@ -138,20 +138,20 @@ function calc_spi_tree(A, ids; labelinternalnodes=true)
 end
 
 """
-    projectinLSV(data::Array{T}, usv::SVD{T}, [window])
+    projectinLSV(data::AbstractArray{T}, usv::SVD{T}, [window])
 
 returns estimated left singular vectors (aka: LSV or Û) for new data based on already calculated SVD factorization
 """
-projectinLSV(data::Array{T}, usv::SVD{T}) where T<:Number  = data * usv.V * inv(diagm(usv.S))
-projectinLSV(data::Array{T}, usv::SVD{T}, window) where T<:Number = data * usv.V[:, window] * inv(diagm(usv.S[window]))
+projectinLSV(data::AbstractArray{T}, usv::SVD{T}) where T<:Number  = data * usv.V * inv(diagm(usv.S))
+projectinLSV(data::AbstractArray{T}, usv::SVD{T}, window) where T<:Number = data * usv.V[:, window] * inv(diagm(usv.S[window]))
 
 """
-    projectinRSV(data::Array{T}, usv::SVD{T}, [window])
+    projectinRSV(data::AbstractArray{T}, usv::SVD{T}, [window])
 
 returns estimated transposed right singular vectors (RSV or V̂ᵗ) for new data based on already calculated SVD factorization
 """
-projectinRSV(data::Array{T}, usv::SVD{T}) where T<:Number = inv(diagm(usv.S)) * usv.U' * data
-projectinRSV(data::Array{T}, usv::SVD{T}, window) where T<:Number = inv(diagm(usv.S[window])) * usv.U'[window,:] * data
+projectinRSV(data::AbstractArray{T}, usv::SVD{T}) where T<:Number = inv(diagm(usv.S)) * usv.U' * data
+projectinRSV(data::AbstractArray{T}, usv::SVD{T}, window) where T<:Number = inv(diagm(usv.S[window])) * usv.U'[window,:] * data
 
 """
     projectout(usv::SVD, [window])
