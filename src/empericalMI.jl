@@ -49,7 +49,7 @@ function empiricalMI(a::AbstractVector{T}, b::AbstractVector{T}; nbins=50, norma
 end
 
 # value grouped by binary catagory
-function empiricalMI(ab::AbstractVector{F}, mask::M; nbins=100, normalize=false) where {F <: Number, M <: Union{BitVector, AbstactVector{<:Bool}}}
+function empiricalMI(ab::AbstractVector{F}, mask::M; nbins=100, normalize=false) where {F <: Number, M <: Union{BitVector, AbstractVector{<:Bool}}}
     length(ab) == length(mask) ||
         throw(ArgumentError("length of vals and meta must match; got vals=$(length(vals)), meta=$(length(meta))"))
     # num samples marginal then total
