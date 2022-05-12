@@ -1,7 +1,7 @@
 
 struct SPIResult{T}
     usv::SVD{T}
-    spimtx::Matrix{T}
+    spimtx::AbstractMatrix{T}
     spitree::Hclust
 end
 
@@ -9,11 +9,11 @@ struct LSVs end
 struct RSVs end
 
 """
-    spiresult(A::Matrix{<:Number})
+    spiresult(A::AbstractMatrix{<:Number})
 
 convenience function for optaining SVD, SPImtx, and SPItree
 """
-function spiresult(A::Matrix{<:Number})
+function spiresult(A::AbstractMatrix{<:Number})
     usv = svd(A)
     spimtx = calc_spr_mtx(usv)
     spitree = hclust(spimtx; linkage=:average, branchorder=:optimal)
@@ -22,7 +22,7 @@ end
 
 
 """
-    getintervals(S::Vector{<:Number}; alpha=1.5, q=.75)
+    getintervals(S::AbstractVector{<:Number}; alpha=1.5, q=.75)
 
 finds spectral partitions. Computes log difference between each subsequent singular
 value and by default selects the differences that are larger than `1.5 * Q3(differences)`
@@ -35,10 +35,10 @@ Args:
 * q = which quantile of log differences to use; by default Q3 
 
 Returns:
-* Vector{UnitRange} indices into S corresponding to the spectral partitions
+* AbstractVector{UnitRange} indices into S corresponding to the spectral partitions
 
 """
-function getintervals(S::Vector{<:Number}; alpha=1.5, q=.75)
+function getintervals(S::AbstractVector{<:Number}; alpha=1.5, q=.75)
     potentialbreaks = abs.(diff(log.(S.+1)))
     θ = alpha * quantile(potentialbreaks, q)
     breaks = findall(potentialbreaks .> θ) .+ 1
@@ -49,7 +49,7 @@ end
 
 
 """
-    calc_spi_mtx(A::Matrix; [Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.5, q=.75])
+    calc_spi_mtx(A::AbstractMatrix; [Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.5, q=.75])
     calc_spi_mtx(usv::SVD; [Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.5, q=.75])
     calc_spi_mtx(usv::SVD[, SPI.LSVs(); Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.5, q=.75])
     calc_spi_mtx(usv::SVD[, SPI.RSVs(); Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.5, q=.75])
@@ -62,23 +62,27 @@ computes the cumulative spectral residual distance for spectral phylogenetic inf
 where ``P`` are the spectral partitions found with `getintervals`. 
 
 Args:
-* A,usv = Matrix or SVD factorization (Matrix is just passed to `svd()` before calculation)
-* SPI.Left() computes SPI matrix for LSVs; SPI.Right() computes SPI Matrix for RSVs
+* A,usv = AbstractMatrix or SVD factorization (AbstractMatrix is just passed to `svd()` before calculation)
+* SPI.Left() computes SPI matrix for LSVs; SPI.Right() computes SPI matrix for RSVs
 * alpha, q are passed to `getintervals()` see its documentation
 
 Returns:
 * distance matrix
 """
-calc_spi_mtx(A::Matrix{<:Number}; alpha=1.5, q=.75) = calc_spi_mtx(svd(A); alpha, q)
-calc_spi_mtx(A::Matrix{<:Number}, ::LSVs; alpha=1.5, q=.75) = calc_spi_mtx(svd(A), LSVs(); alpha, q)
-calc_spi_mtx(A::Matrix{<:Number}, ::RSVs; alpha=1.5, q=.75) = calc_spi_mtx(svd(A), RSVs(); alpha, q)
+calc_spi_mtx(A::AbstractMatrix{<:Number}; alpha=1.5, q=.75) = calc_spi_mtx(svd(A); alpha, q)
+calc_spi_mtx(A::AbstractMatrix{<:Number}, ::LSVs; alpha=1.5, q=.75) = calc_spi_mtx(svd(A), LSVs(); alpha, q)
+calc_spi_mtx(A::AbstractMatrix{<:Number}, ::RSVs; alpha=1.5, q=.75) = calc_spi_mtx(svd(A), RSVs(); alpha, q)
 
 calc_spi_mtx(usv::SVD; alpha=1.5, q=.75) = calc_spi_mtx(usv, LSVs(); alpha, q)
 calc_spi_mtx(usv::SVD, ::LSVs; alpha=1.5, q=.75) = calc_spi_mtx(usv.U, usv.S; alpha, q)
-calc_spi_mtx(usv::SVD, ::RSVs; alpha=1.5, q=.75) = calc_spi_mtx(Matrix(usv.V), usv.S; alpha, q)
-function calc_spi_mtx(vecs::Matrix{<:T}, vals::Vector{<:T}; alpha=1.5, q=.75) where T<:Number
+calc_spi_mtx(usv::SVD, ::RSVs; alpha=1.5, q=.75) = calc_spi_mtx(AbstractMatrix(usv.V), usv.S; alpha, q)
+function calc_spi_mtx(vecs::AbstractMatrix{<:T}, vals::AbstractVector{<:T}; alpha=1.5, q=.75) where T<:Number
+    intervals = getintervals(vals; alpha, q)
+    calc_spi_mtx(vecs, vals, intervals)
+end
+function calc_spi_mtx(vecs::AbstractMatrix{<:T}, vals::AbstractVector{<:T}, intervals::AbstractVector) where T<:Number
     sprmtx = zeros(size(vecs,1), size(vecs,1))
-    for grp in getintervals(vals, alpha=alpha, q=q)
+    for grp in intervals
         sprmtx += Distances.pairwise(WeightedEuclidean(vals[grp]), vecs'[grp,:])
     end
     return sprmtx.^2
