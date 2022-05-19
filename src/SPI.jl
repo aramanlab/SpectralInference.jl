@@ -23,8 +23,8 @@ export zscore, scaledcumsum, nwstr
     minspaceneeded, spimtx_spaceneeded,
 include("helpers.jl")
 
-export empericalMI, adjustedrandindex, vmeasure_homogeneity_completeness
-include("empericalMI.jl")
+export empiricalMI, adjustedrandindex, vmeasure_homogeneity_completeness
+include("empiricalMI.jl")
 
 include("parsephylip.jl")
 
