@@ -37,9 +37,9 @@ function empiricalMI(a::AbstractVector{T}, b::AbstractVector{T}; nbins=50, norma
     delta = breaks[2] - breaks[1]
 
     # approx entropy
-    ha = entropy(afreq) + log(delta)
-    hb = entropy(bfreq) + log(delta)
-    hab = entropy(abfreq) + log(delta^2)
+    ha = entropy(afreq, 2) + log2(delta)
+    hb = entropy(bfreq, 2) + log2(delta)
+    hab = entropy(abfreq, 2) + log2(delta^2)
 
     # mi
     mi = ha + hb - hab
@@ -90,19 +90,23 @@ function empiricalMI(ab::AbstractVector{F}, mask::M; nbins=100, normalize=false)
 end
 
 # value grouped by multiple categories
-function empiricalMI(a::AbstractVector{V}, b::AbstractVector{M}; nbins=100) where {V <: AbstractFloat,  M <: Union{Integer, AbstractString}}
+function empiricalMI(a::AbstractVector{V}, b::AbstractVector{M}; nbins=100) where 
+    {V <: AbstractFloat,  M <: AbstractString}
+    
     binned_a, a_bw = _bin_numbers(a, nbins)
     empiricalMI(binned_a, b; bw_a=a_bw)
 end
 
 # discrete catagories
 empiricalMI(a::BitVector, b::BitVector) = empiricalMI(Int.(a), Int.(b))
-function empiricalMI(a::AbstractVector{T}, b::AbstractVector{V}; bw_a=1., bw_b=1., normalize=false) where {T <: Union{Integer,Bool,AbstractString}, V <: Union{Integer,Bool,AbstractString}}
+function empiricalMI(a::AbstractVector{T}, b::AbstractVector{V}; bw_a=1., bw_b=1., normalize=false) where 
+    {T <: Union{Integer,AbstractString}, V <: Union{Integer,AbstractString}}
+    
     counts = freqtable(a, b)
     N = sum(counts)
-    Ha = entropy(sum(counts, dims=2)./N) + log(bw_a)
-    Hb = entropy(sum(counts, dims=1)./N) + log(bw_b)
-    Hab = entropy(counts./N) + log(bw_a * bw_b)
+    Ha = entropy(sum(counts, dims=2)./N, 2) + log2(bw_a)
+    Hb = entropy(sum(counts, dims=1)./N, 2) + log2(bw_b)
+    Hab = entropy(counts./N, 2) + log2(bw_a * bw_b)
     mi = Ha + Hb - Hab
     mi = normalize ? mi / (Ha+Hb)/2 : mi
 end
