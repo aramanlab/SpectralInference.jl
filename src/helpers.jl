@@ -19,6 +19,13 @@ end
 
 
 """
+    explainedvariance(s::AbstractVector{<:Number})
+"""
+function explainedvariance(s::AbstractVector{<:Number})
+    s.^2 / sum(s.^2)
+end
+
+"""
     minspaceneeded(n, p; bits=64) = Base.format_bytes(binomial(n,2) * p * bits)
 
 how much memory is needed to store spectral residual trace
