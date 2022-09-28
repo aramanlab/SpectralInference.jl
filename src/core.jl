@@ -49,6 +49,34 @@ end
 
 
 """
+    getintervalsIQR(S::AbstractVector{<:Number}; alpha=1.5, ql=.25, qh=.75)
+
+finds spectral partitions. Computes log difference between each subsequent singular
+value and by default selects the differences that are larger than `1.5 * Q3(differences)`
+
+i.e. finds breaks in the spectrum that explain smaller scales of variance
+
+Args:
+* S = singular values of a SVD factorization
+* alpha = scalar multiple of `q`
+* q = which quantile of log differences to use; by default Q3 
+
+Returns:
+* AbstractVector{UnitRange} indices into S corresponding to the spectral partitions
+
+"""
+function getintervalsIQR(S::AbstractVector{<:Number}; alpha=1.5, ql=.25, qh=.75)
+    potentialbreaks = abs.(diff(log.(S.+1)))
+    Q1, Q3 = quantile(potentialbreaks, [ql, qh])
+    θ = Q3 + alpha * (Q3 - Q1)
+    breaks = findall(potentialbreaks .> θ) .+ 1
+    starts, ends = vcat(1, breaks), vcat(breaks.-1, length(S))
+    intervals = map((s,e)->s:e, starts, ends)
+    return intervals
+end
+
+
+"""
     calc_spi_mtx(A::AbstractMatrix; [Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.5, q=.75])
     calc_spi_mtx(usv::SVD; [Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.5, q=.75])
     calc_spi_mtx(usv::SVD[, SPI.LSVs(); Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.5, q=.75])
@@ -90,41 +118,51 @@ end
 
 
 """
-    calc_spi_trace(usv::SVD; alpha=1.5, q=.75)
-    calc_spi_trace(usv::SVD[, taxaidxs]; alpha=1.5, q=.75)
+    calc_spi_trace(usv::SVD; onrows=true, groups=nothing, alpha=1.5, q=.75)
+    calc_spi_trace(vecs, vals, groups)
 
 calculates spectral residual within each partition of spectrum and each pair of taxa
 
-if `taxaidxs` are provided the `U` matrix is subset and/or reordered based on those indices.
-
 returns matrix where rows are spectral partitions and columns are taxa:taxa pairs
-ordered as the upper triangle in rowwise order. 
+ordered as the upper triangle in rowwise order, or lower triangle in colwise order.
 
+Args:
+* method: `calc_spi_trace(vecs, vals, groups)`
+    * vecs: either usv.U or usv.V matrix
+    * vals: usv.S singular values vector
+    * groups: usually calculated with `getintervals(usv.S; alpha=alpha, q=q)`
+* method: `calc_spi_trace(usv::SVD; onrows=true, groups=nothing, alpha=1.5, q=.75)`     
+    * usv: SVD object
+    * onrows: switch to calculate SPI on rows (U matrix) or columns (V matrix).
+    * groups: if nothing groups are calculated with `getintervals(usv.S; alpha=alpha, q=q)`, 
+        otherwise they assume a vector of index ranges `[1:1, 2:3, ...]` to group `usv.S` with. 
+    * alpha: passed to `getintervals`
+    * q: passed to `getintervals`
 """
-function calc_spi_trace(usv::SVD; alpha=1.5, q=.75)
-    groups = getintervals(usv.S; alpha=alpha, q=q)
-    Nsmps = size(usv.U,1)
-    r = zeros(binomial(Nsmps, 2), length(groups))
-    for (k, (i,j)) in enumerate(combinations(1:Nsmps, 2))
-        for (g, grp) in enumerate(groups)
-            r[g, k] = Distances.pairwise(WeightedEuclidean(usv.S[grp]), usv.U'[grp, i], usv.U'[grp, j])
-        end
-    end
+function calc_spi_trace(usv::SVD; onrows=true, groups=nothing, alpha=1.5, q=.75)
+    groups = isnothing(groups) ? getintervals(usv.S; alpha=alpha, q=q) : groups
+    vecs = onrows ? usv.U : usv.V
+    r = zeros(length(groups), binomial(size(vecs, 1), 2))
+    calc_spi_trace!(r, vecs, usv.S, groups)
     return r
 end
 
-function calc_spi_trace(usv::SVD, taxaidxs; alpha=1.5, q=.75)
-    groups = getintervals(usv.S; alpha=alpha, q=q)
-    Usubset = @view usv.U[taxaidxs,:]
-    Nsmps = size(Usubset,1)
-    r = zeros(binomial(Nsmps, 2), length(groups))
-    for (k, (i,j)) in enumerate(combinations(1:Nsmps, 2))
-        for (g, grp) in enumerate(groups)
-            r[g, k] = Distances.pairwise(WeightedEuclidean(usv.S[grp]), Usubset'[grp, i], Usubset'[grp, j])
-        end
-    end
+function calc_spi_trace(vecs, vals, groups)
+    Nsmps = size(vecs,1)
+    r = zeros(length(groups), binomial(Nsmps, 2))
+    calc_spi_trace!(r, vecs, vals, groups)
     return r
 end
+
+function calc_spi_trace!(r, vecs, vals, groups)
+    Nsmps = size(vecs,1)
+    for (k, (i,j)) in enumerate(combinations(1:Nsmps, 2))
+        for (g, grp) in enumerate(groups)
+            r[g, k] = WeightedEuclidean(vals[grp])(vecs'[grp, i], vecs'[grp, j])
+        end
+    end
+end
+
 
 """
     calc_spi_tree(A[, ids; labelinternalnodes=true])

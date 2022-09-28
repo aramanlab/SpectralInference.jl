@@ -10,6 +10,7 @@ using Clustering
 using LinearAlgebra
 using FreqTables: freqtable
 using CategoricalArrays: cut
+using Combinatorics: combinations
 
 @reexport using LinearAlgebra
 @reexport using Clustering: hclust
