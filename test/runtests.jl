@@ -33,9 +33,10 @@ using Test
 
     usv = svd(M)
     Dij_pred = calc_spi_mtx(usv.U, usv.S, [1:1, 2:2, 3:4])
-
+    @inferred calc_spi_mtx(usv.U, usv.S, [1:1, 2:2, 3:4])
     # tests for getting partitions
     @test getintervals(expS) == [1:1, 2:3, 4:6, 7:7]
+    @inferred getintervals(expS) == [1:1, 2:3, 4:6, 7:7]
     @test getintervalsIQR(expS) == [1:7]
     
     # test if SPI distance works
@@ -57,14 +58,7 @@ using Test
 
     # test partial spi_trace calculations result in summed SPI distance matrix
     @test isapprox(vec(sum(calc_spi_trace(usv,  q=.25), dims=1) .^ 2), Dij_true[triu(trues(4,4), 1)], atol=1e-5)
-
-    SPCORR_true = [ 
-        1.0       0.729435  0.360862  0.819356
-        0.729435  1.0       0.39921   0.55053
-        0.360862  0.39921   1.0       0.800558
-        0.819356  0.55053   0.800558  1.0
-    ]
-    @test isapprox(calc_spcorr_mtx(usv.U, usv.S, 1:4), SPCORR_true, atol=1e-6)
+    @inferred calc_spcorr_mtx(usv.U, usv.S, 1:4)
 end
 
 @testset "SPI.jl helpers" begin
