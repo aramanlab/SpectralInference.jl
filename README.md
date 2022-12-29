@@ -92,7 +92,7 @@ adata.uns["newicktreestring"] = nwtreestring
 @time begin 
 	writeh5ad("spi_test.h5ad", adata)
 	open("test_tree.nw.txt", "w") do io
-		write(io, nwtreestring * "\n")
+		println(io, nwtreestring)
 	end
 	jldsave("test_tree.jld2"; spitree)
 end

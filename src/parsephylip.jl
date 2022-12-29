@@ -1,4 +1,3 @@
-
 """
     readphylip(fn::String)
 
@@ -25,18 +24,6 @@ end # read phylip
 
 
 onehotencode(seqs::AbstractVector{<:AbstractString}) = onehotencode(_stringcolumntocharmtx(seqs))
-function onehotencode(df::D) where D<:AbstractDataFrame
-    ohedf = spzeros(size(df,1), 0)
-    origsize=size(df,2)
-    for i in 1:origsize
-        ohedf = hcat(ohedf, onehotencode(df, string(i)))
-    end
-    ohedf
-end 
-function onehotencode(df::D, col, cate = sort(unique(df[!, col])); outnames = Symbol.(:ohe_,col,cate)) where D<:AbstractDataFrame
-    select(df, @. col => ByRow(isequal(cate)) .=> outnames)
-end
-
 function onehotencode(chardf::AbstractMatrix{<:Char})
     ohemtx = Vector()
     for col in eachcol(chardf)
@@ -45,9 +32,6 @@ function onehotencode(chardf::AbstractMatrix{<:Char})
     return sparse(hcat(ohemtx...))
 end
 
-function _stringcolumntochardf(seqs)
-    DataFrame(reduce(hcat, collect.(seqs)) |> permutedims, [string(i) for i in 1:length(first(seqs))])
-end
 function _stringcolumntocharmtx(seqs)
     Matrix(DataFrame(reduce(hcat, collect.(seqs)) |> permutedims, [string(i) for i in 1:length(first(seqs))]))
 end
