@@ -70,7 +70,6 @@ function squareform(d::AbstractVector, fillvalue=zero(eltype(d)))
     Dij
 end
 function squareform(d::AbstractMatrix, fillvalue=zero(eltype(d)))
-    println(size(d))
     (size(d, 1) == size(d, 2)) || throw(ArgumentError("size of d: $(size(d)), is not square"))
     n = binomial(size(d,1), 2)
     Dk = fill(fillvalue, n)
