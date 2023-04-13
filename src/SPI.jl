@@ -10,7 +10,6 @@ using LinearAlgebra
 using Printf: @sprintf
 using FreqTables: freqtable
 using CategoricalArrays: cut
-using Combinatorics: combinations
 
 @reexport using LinearAlgebra
 @reexport using Clustering: hclust
@@ -26,7 +25,7 @@ include("core.jl")
 
 export explainedvariance, scaledcumsum, 
     minspaceneeded, spimtx_spaceneeded,
-    reshape_pairs_to_distance_matrix
+    squareform
 include("helpers.jl")
 
 export empiricalMI, adjustedrandindex, vmeasure_homogeneity_completeness

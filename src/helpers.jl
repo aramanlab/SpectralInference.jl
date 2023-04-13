@@ -35,41 +35,49 @@ spimtx_spaceneeded(n; bits=64) = Base.format_bytes(n^2 * bits)
     pairwise(func::Function, m::M) where M<:AbstractMatrix
 
 returns upper offdiagonals of `res[k] = func(i, j)` where `(k, (i,j))` 
-are calculated from `enumerate(combinations(axes(m,2), 2))`
+are calculated from `enumerate(((i, j) for j in axes(m, 2) for i in (j+1):lastindex(m, 2)))`
 """
 function pairwise(func::Function, m::M) where M<:AbstractMatrix
     result = zeros(binomial(size(m,2),2))
-    for (k, (i,j)) in enumerate(combinations(axes(m,2), 2))
+    for (k, (i,j)) in enumerate(((i, j) for j in axes(m, 2) for i in (j+1):lastindex(m, 2)))
         result[k] = func(m[:,i], m[:,j])
     end
     return result
 end
 
 
-"""
-        numpairs2N(x)::Integer
-    solve choose(n,k)=x for n
-    for numbers around a trillion use a BigInt for x
-"""
-function numpairs2N(x)
-    # solve choose(n,k)=x for n
-    n = (1 + sqrt(1 + 8x)) / 2
-    # n not whole means that x was not a binomial number
-end
+numpairs2N(x) = (1 + sqrt(1 + 8x)) / 2
+checkoffdiagonal(d) = numpairs2N(length(d)) % 1 == 0
 
 """
-    reshape_pairs_to_distance_matrix(pairs::Vector; defaultval=zeros)
-take the columnwise vectorized lower diagonal of distance matrix and remake a symetric distance matrix.
+    squareform(d::AbstractVector, fillvalue=zero(eltype(d)))
+    squareform(d::AbstractVector, fillvalue=zero(eltype(d)))
+
+If `d` is a vector, `squareform` checks if it of `n` choose 2 length for integer `n`, then fills the values of a symetric square matrix with the values of `d`.
+
+If `d` is a matrix, `squareform` checks if it is square then fills the values of vector with the lower offdiagonal of matrix `d` in column order form. 
+
+`fillvalue` is the initial value of the produced vector or matrix. Only really apparant in a produced matrix where it will be the values on the diagonal.
 """
-function reshape_pairs_to_distance_matrix(pairsvec; defaultval=zeros)
-    n = numpairs2N(length(pairsvec))
-    n % 1 == 0. || throw(ArgumentError("Your matrix has the wrong number of pairs to be a pairwise combination"))
-    distmtx = defaultval(Int(n), Int(n))
-    for (k, (i,j)) in enumerate(combinations(1:Int(n), 2))
-        distmtx[i,j] = pairsvec[k]
-        distmtx[j,i] = pairsvec[k]
+function squareform(d::AbstractVector, fillvalue=zero(eltype(d))) 
+    checkoffdiagonal(d) || throw(ArgumentError("Vector wrong length, to be square matrix offdiagonals"))
+    n = numpairs2N(length(d))
+    Dij = fill(fillvalue, Int(n), Int(n))
+    for (k,(i,j)) in enumerate(((i, j) for j in axes(Dij, 2) for i in (j+1):lastindex(Dij, 1)))
+        Dij[i, j] = d[k]
+        Dij[j, i] = d[k]
     end
-    return distmtx
+    Dij
+end
+function squareform(d::AbstractMatrix, fillvalue=zero(eltype(d)))
+    println(size(d))
+    (size(d, 1) == size(d, 2)) || throw(ArgumentError("size of d: $(size(d)), is not square"))
+    n = binomial(size(d,1), 2)
+    Dk = fill(fillvalue, n)
+    for (k,(i,j)) in enumerate(((i, j) for j in axes(d, 2) for i in (j+1):lastindex(d, 1)))
+        Dk[k] = d[i, j]
+    end
+    Dk
 end
 
 """

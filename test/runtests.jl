@@ -83,19 +83,19 @@ end
         1 0 1 1 1 0
     ])
     ps = SPI.pairwise((i,j) -> i' * j , M')
-    @test ps ≈ [ 3.0,2.0,2.0,2.0,2.0,3.0]
+    @test ps ≈ [3.0,2.0,2.0,2.0,2.0,3.0]
 
     @test SPI.numpairs2N(6) == 4.0
     @test SPI.numpairs2N(5) ≈ 3.7015621187164243
 
-    @test reshape_pairs_to_distance_matrix(ps) ≈ [
+    @test squareform(ps) ≈ [
         0.0  3.0  2.0  2.0
         3.0  0.0  2.0  2.0
         2.0  2.0  0.0  3.0
         2.0  2.0  3.0  0.0
     ]
 
-    @test reshape_pairs_to_distance_matrix(ps, defaultval=(args...)->fill(4, args...)) ≈ [
+    @test squareform(ps, 4.) ≈ [
         4.0  3.0  2.0  2.0
         3.0  4.0  2.0  2.0
         2.0  2.0  4.0  3.0

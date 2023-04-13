@@ -156,7 +156,7 @@ end
 
 function calc_spi_trace!(r, vecs, vals, groups)
     Nsmps = size(vecs,1)
-    for (k, (i,j)) in enumerate(combinations(1:Nsmps, 2))
+    for (k,(i,j)) in enumerate(((i, j) for j in 1:Nsmps for i in (j+1):Nsmps))
         for (g, grp) in enumerate(groups)
             r[g, k] = WeightedEuclidean(vals[grp])(vecs'[grp, i], vecs'[grp, j])
         end
