@@ -101,8 +101,8 @@ end
 
 # discrete catagories
 empiricalMI(a::BitVector, b::BitVector; kwargs...) = empiricalMI(Int.(a), Int.(b); kwargs...)
-function empiricalMI(a::AbstractVector{T}, b::AbstractVector{V}; bw_a=1., bw_b=1., base=ℯ, normalize=false) where 
-    {T <: Union{Integer,AbstractString}, V <: Union{Integer,AbstractString}}
+function empiricalMI(a::AbstractVector{T}, b::AbstractVector{T}; bw_a=1., bw_b=1., base=ℯ, normalize=false) where 
+    {T <: Union{Integer,AbstractString}}
     
     counts = freqtable(a, b)
     N = sum(counts)
