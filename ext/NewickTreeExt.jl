@@ -7,8 +7,6 @@ using NewickTree: Node
 using NewickTree: prewalk, height, getpath
 using NewickTree: setdistance!, setsupport!, support, getpath
 
-using PrecompileTools
-
 """
     getleafnames(t::NewickTree.Node)
 
@@ -83,6 +81,10 @@ function SpectralInference.patristic_distances(tree::Node)
     return dists
 end
 
+""" 
+    fscore_precision_recall(reftree, predictedtree) 
+fscore, precision, and recall of branches between the two trees
+"""
 function SpectralInference.fscore_precision_recall(reftree::Node, predtree::Node; β=1.0)
     truesplits = keys(_tally_tree_bifurcations(reftree))
     predsplits = keys(_tally_tree_bifurcations(predtree))
@@ -235,6 +237,11 @@ function SpectralInference.as_polytomy!(fun::Function, tree::Node)
     end
 end
 
+"""
+    ladderize!(tree, rev=false)
+
+sorts children of each node by number of leaves descending from the child in ascending order.
+"""
 function SpectralInference.ladderize!(t; rev=false)
     function walk!(n)
         if isleaf(n)
@@ -249,6 +256,12 @@ function SpectralInference.ladderize!(t; rev=false)
 end
 
 
+"""
+    spectral_lineage_encoding(tree::Node, orderedleafnames=getleafnames(tree); filterfun=x->true)
+
+returns vector of named tuples with the id `nodeid` of the node and `sle` a vector of booleans
+ordered by `orderedleafnames` where true indicates the leaf descends from the node and false indicates that it does not.
+"""
 function SpectralInference.spectral_lineage_encoding(tree::Node, orderedleafnames=getleafnames(tree); filterfun=x->true)
     map(filter(filterfun, prewalk(tree))) do node
         tmp = falses(length(orderedleafnames))
@@ -285,6 +298,15 @@ function SpectralInference.pairedMI_across_treedepth(metacolumns, IDS, tree::Nod
     (;MI, treedepths)
 end
 
+
+"""
+    clusters_per_cutlevel(distfun::Function, tree::Node, ncuts::Number)
+
+Returns:
+* clusts: vector of cluster-memberships. each value indicates the cluster membership of the leaf at that cut. 
+    leaves are ordered in prewalk order within each membership vector
+* treedepths: distance from root for each of the `ncuts`
+"""
 function SpectralInference.clusters_per_cutlevel(distfun::Function, tree::Node, ncuts::Number)
     minmax = extrema(mapinternalnodes(distfun, tree, tree))
     treedepths = range(zero(first(minmax)), minmax[2], length=ncuts)
@@ -315,6 +337,7 @@ function _collectMI_across_treedepth(clusts, clust_names, IDS, ptax; bootstrap=f
     end
 end
 
+using PrecompileTools
 @setup_workload begin
     @compile_workload begin
         N = 10
