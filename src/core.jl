@@ -1,23 +1,4 @@
 
-struct SPIResult{T}
-    usv::SVD{T}
-    spimtx::AbstractMatrix{T}
-    spitree::Hclust
-end
-
-"""
-    spiresult(A::AbstractMatrix{<:Number})
-
-convenience function for optaining SVD, SPImtx, and SPItree
-"""
-function spiresult(A::AbstractMatrix{<:Number})
-    usv = svd(A)
-    spimtx = spectraldistances(usv)
-    spitree = UPGMA_tree(spimtx)
-    return SPIResult(usv,spimtx,spitree)
-end
-
-
 """
     getintervals(S::AbstractVector{<:Number}; alpha=1.0, q=0.5)
 
@@ -27,9 +8,9 @@ value and by default selects the differences that are larger than `1.0 * Q2(diff
 i.e. finds breaks in the spectrum that explain smaller scales of variance
 
 Args:
-* S = singular values of a SVD factorization
-* alpha = scalar multiple of `q`
-* q = which quantile of log differences to use; by default Q2 
+* S: singular values of a SVD factorization
+* alpha: scalar multiple of `q`
+* q: which quantile of log differences to use; by default Q2 
 
 Returns:
 * AbstractVector{UnitRange} indices into S corresponding to the spectral partitions
@@ -49,14 +30,14 @@ end
     getintervals_IQR(S::AbstractVector{<:Number}; alpha=1.5, ql=.25, qh=.75)
 
 finds spectral partitions. Computes log difference between each subsequent singular
-value and by default selects the differences that are larger than `ALPHA * Q3(differences)`
+value and by default selects the differences that are larger than `1.5 * IQR(differences)`
 
 i.e. finds breaks in the spectrum that explain smaller scales of variance
 
 Args:
-* S = singular values of a SVD factorization
-* alpha = scalar multiple of `q`
-* q = which quantile of log differences to use; by default Q3 
+* S: singular values of a SVD factorization
+* alpha: scalar multiple of `q`
+* q: which quantile of log differences to use; by default Q3 
 
 Returns:
 * AbstractVector{UnitRange} indices into S corresponding to the spectral partitions
@@ -74,10 +55,9 @@ end
 
 
 """
-    spectraldistances(A::AbstractMatrix; [Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.0, q=0.5])
-    spectraldistances(usv::SVD; [Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.0, q=0.5])
-    spectraldistances(usv::SVD[, SPI.left; Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.0, q=0.5])
-    spectraldistances(usv::SVD[, SPI.RSVs(); Nsmps=size(A,1), Nfeats=size(A,2), alpha=1.0, q=0.5])
+    spectraldistances(A::AbstractMatrix; [onrows=true, alpha=1.0, q=0.5])
+    spectraldistances(usv::SVD; [onrows=true, alpha=1.0, q=0.5])
+    spectraldistances(vecs::AbstactMatrix, vals::AbstractMatrix, intervals::AbstractVector{<:UnitRange})
 
 
 computes the cumulative spectral residual distance for spectral phylogenetic inference
@@ -87,17 +67,17 @@ computes the cumulative spectral residual distance for spectral phylogenetic inf
 where ``P`` are the spectral partitions found with `getintervals`. 
 
 Args:
-* A,usv = AbstractMatrix or SVD factorization (AbstractMatrix is just passed to `svd()` before calculation)
-* SPI.Left() computes SPI matrix for LSVs; SPI.Right() computes SPI matrix for RSVs
-* alpha, q are passed to `getintervals()` see its documentation
+* A, usv: AbstractMatrix or SVD factorization (AbstractMatrix is passed to `svd()` before calculation)
+* onrows: if true will compute spectral distances on the left singular vectors (U matrix), if false will calculate on the right singular vectors or (V matrix)
+* alpha, q: are passed to `getintervals()` see its documentation
 
 Returns:
 * distance matrix
 """
-spectraldistances(A::AbstractMatrix{<:Number}; onrows=true::Bool, alpha=ALPHA, q=QUANT) = begin
+function spectraldistances(A::AbstractMatrix{<:Number}; onrows=true::Bool, alpha=ALPHA, q=QUANT)
     spectraldistances(svd(A); onrows, alpha, q)
 end
-spectraldistances(usv::SVD; onrows=true::Bool, alpha=ALPHA, q=QUANT) = begin 
+function spectraldistances(usv::SVD; onrows=true::Bool, alpha=ALPHA, q=QUANT) 
     if onrows
         spectraldistances(usv.U, usv.S; alpha, q)
     else
@@ -133,7 +113,7 @@ Args:
     * groups: usually calculated with `getintervals(usv.S; alpha=alpha, q=q)`
 * method: `spectraldistances_trace(usv::SVD; onrows=true, groups=nothing, alpha=1.0, q=0.5)`     
     * usv: SVD object
-    * onrows: switch to calculate SPI on rows (U matrix) or columns (V matrix).
+    * onrows: true/false switch to calculate spectral distance on rows (U matrix) or columns (V matrix).
     * groups: if nothing groups are calculated with `getintervals(usv.S; alpha=alpha, q=q)`, 
         otherwise they assume a vector of index ranges `[1:1, 2:3, ...]` to group `usv.S` with. 
     * alpha: passed to `getintervals`
@@ -185,6 +165,8 @@ projectinRSV(data::AbstractArray, usv::SVD, window) = inv(diagm(usv.S[window])) 
 
 recreates original matrix i.e. calculates ``UΣV'`` or if window is included 
 creates a spectrally filtered version of the original matrix off of the provided components in `window`.
+
+i.e., `usv.U[:, window] * diagm(usv.S[window]) * usv.Vt[window, :]`
 """
 projectout(usv::SVD) = usv.U * diagm(usv.S) * usv.Vt
 projectout(usv::SVD, window) = usv.U[:, window] * diagm(usv.S[window]) * usv.Vt[window, :]
@@ -206,9 +188,9 @@ end
 Calculates pairwise spectral (pearson) correlations for a set of observations. 
 
 Args:
-* `vecs`, set of left singular vectors or principal components with observations on rows and components on columns
-* `vals`, vector of singular values
-* `window`, set of indices of `vecs` columns to compute correlations across
+* vecs: set of left or right singular vectors with observations/features on rows and spectral components on columns
+* vals: vector of singular values
+* window: set of indices of `vecs` columns to compute correlations across
 
 Returns:
 * correlation matrix where each pixel is the correlation between a pair of observations
@@ -225,9 +207,13 @@ end
     newickstring(hc::Hclust[, tiplabels::AbstractVector[<:String]])
 
 convert Hclust to newick tree string
+
 Args:
-* hc, `Hclust` object from Clustering package
-* tiplabels, `AbstractVector{<:String}` names in same order as distance matrix
+* hc: `Hclust` object from Clustering package
+* tiplabels: `AbstractVector{<:String}` names in same order as distance matrix
+
+Returns:
+* [newick tree](https://en.wikipedia.org/wiki/Newick_format) formated string
 """
 newickstring(hc::Hclust; labelinternalnodes=false) = newickstring(hc, string.(1:length(hc.order)); labelinternalnodes)
 newickstring(hc::Hclust, tiplabels::AbstractVector{<:Symbol}; labelinternalnodes=false) = newickstring(hc, string.(tiplabels); labelinternalnodes)

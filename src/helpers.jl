@@ -17,27 +17,34 @@ function explainedvariance(s::AbstractVector{<:Number})
 end
 
 """
-    minspaceneeded(n, p; bits=64) = Base.format_bytes(binomial(n,2) * p * bits)
+    distancetrace_spaceneeded(n, p; bits=64) = Base.format_bytes(binomial(n,2) * p * bits)
 
 how much memory is needed to store spectral residual trace
+
+Args:
+* n: number of samples
+* p: number of partitions/components
 """
-minspaceneeded(n,p; bits=64) = Base.format_bytes(binomial(n,2) * p * bits)
+distancetrace_spaceneeded(n,p; bits=64) = Base.format_bytes(binomial(n,2) * p * bits)
 
 """
-    spimtx_spaceneeded(n, p; bits=64) = Base.format_bytes(binomial(n,2) * p * bits)
+    distancematrix_spaceneeded(n, p; bits=64) = Base.format_bytes(binomial(n,2) * p * bits)
 
-how much memory is needed to store SPI distance matrix
+how much memory is needed to store distance matrix
+Args:
+* n: number of samples
 """
-spimtx_spaceneeded(n; bits=64) = Base.format_bytes(n^2 * bits)
+distancematrix_spaceneeded(n; bits=64) = Base.format_bytes(n^2 * bits)
 
 
 """
-    pairwise(func::Function, m::M) where M<:AbstractMatrix
+    pairwise(func::Function, m::AbstractMatrix)
 
-returns upper offdiagonals of `res[k] = func(i, j)` where `(k, (i,j))` 
-are calculated from `enumerate(((i, j) for j in axes(m, 2) for i in (j+1):lastindex(m, 2)))`
+returns the lower columnwise offdiagonal of `result[k] = func(i, j)` 
+where k is the kth pair and i and j are the ith and kth columns of m 
+calculated from `enumerate(((i, j) for j in axes(m, 2) for i in (j+1):lastindex(m, 2)))`
 """
-function pairwise(func::Function, m::M) where M<:AbstractMatrix
+function pairwise(func::Function, m::AbstractMatrix)
     result = zeros(binomial(size(m,2),2))
     for (k, (i,j)) in enumerate(((i, j) for j in axes(m, 2) for i in (j+1):lastindex(m, 2)))
         result[k] = func(m[:,i], m[:,j])

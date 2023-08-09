@@ -1,14 +1,14 @@
 ```@meta
-CurrentModule = SPI
+CurrentModule = SpectralInference
 ```
 
-# SPI
+# SpectralInference
 
-Documentation for [SPI](https://github.com/aramanlab/SPI.jl).
+Documentation for [SpectralInference](https://github.com/aramanlab/SpectralInference.jl).
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [SPI]
+Modules = [SpectralInference]
 ```

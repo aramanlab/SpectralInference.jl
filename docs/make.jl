@@ -1,16 +1,16 @@
-using SPI
+using SpectralInference
 using Documenter
 
-DocMeta.setdocmeta!(SPI, :DocTestSetup, :(using SPI); recursive=true)
+DocMeta.setdocmeta!(SpectralInference, :DocTestSetup, :(using SpectralInference); recursive=true)
 
 makedocs(;
-    modules=[SPI],
+    modules=[SpectralInference],
     authors="Benjamin Doran and collaborators",
-    repo="https://github.com/aramanlab/SPI.jl/blob/{commit}{path}#{line}",
-    sitename="SPI.jl",
+    repo="https://github.com/aramanlab/SpectralInference.jl/blob/{commit}{path}#{line}",
+    sitename="SpectralInference.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://aramanlab.github.io/SPI.jl",
+        canonical="https://aramanlab.github.io/SpectralInference.jl",
         assets=String[],
     ),
     pages=[
@@ -19,6 +19,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/aramanlab/SPI.jl",
+    repo="github.com/aramanlab/SpectralInference.jl",
     devbranch="main",
 )

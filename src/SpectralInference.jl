@@ -15,10 +15,14 @@ using CategoricalArrays: cut
 const ALPHA = 1.0
 const QUANT = 0.5
 
-export spiresult, newickstring
-export getintervals, getintervalsIQR, UPGMA_tree,
-    spectraldistances, spectraldistances_trace, spectralcorrelations,
-    projectinLSV, projectinRSV, projectout
+export spectraldistances, 
+    spectraldistances_trace, 
+    spectralcorrelations,
+    getintervalsIQR, 
+    getintervals, 
+    projectinLSV, projectinRSV, projectout, 
+    UPGMA_tree,
+    newickstring
 include("core.jl")
 
 export explainedvariance, scaledcumsum, 

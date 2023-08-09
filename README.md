@@ -1,9 +1,9 @@
 # Spectral Inference
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://aramanlab.github.io/SPI.jl/stable)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://aramanlab.github.io/SPI.jl/dev)
-[![Build Status](https://github.com/aramanlab/SPI.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/aramanlab/SPI.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/aramanlab/SPI.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/aramanlab/SPI.jl)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://aramanlab.github.io/SpectralInference.jl/stable)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://aramanlab.github.io/SpectralInference.jl/dev)
+[![Build Status](https://github.com/aramanlab/SpectralInference.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/aramanlab/SpectralInference.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Coverage](https://codecov.io/gh/aramanlab/SpectralInference.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/aramanlab/SpectralInference.jl)
 
 ## Install
 
@@ -42,12 +42,12 @@ nwstring = NeighborJoining.newickstring(njclusts, ids)
 example script for running SpectralInference on a gene expression matrix in a `.csv` file to generate spectral tree.
 
 ```julia
-# Example SPI code for gene expression matrix in .csv format (genes = rows, cells = columns)
+# Example SpectralInference code for gene expression matrix in .csv format (genes = rows, cells = columns)
 # Ben Doran / Noah Gamble
 # 2023/08/07
 
 # Load packages
-using SPI
+using SpectralInference
 using NeighborJoining
 using CSV, DataFrames
 using LinearAlgebra
@@ -78,20 +78,20 @@ adata.var_names .= string.(df.Column1[idx_keep])
 @info "Peforming SVD..."
 @time usv = svd(adata.X)
 
-# Perform SPI
-@info "Calculating SPI matrix..."
+# Perform SpectralInference
+@info "Calculating SpectralInference matrix..."
 @time dij = spectraldistances(usv.U, usv.S, getintervals(usv.S))
 
 # Cluster to tree
-@info "Clustering SPI matrix..."
+@info "Clustering SpectralInference matrix..."
 # @time spitree = UPGMA_tree(dij)
 # @time nwtreestring = SpectralInference.newickstring(spitree, adata.obs_names.vals)
 @time spitree = regNJ(dij)
 @time nwtreestring = NeighborJoining.newickstring(spitree, adata.obs_names.vals)
 
-# Add SPI matrix to adata object
-@info "Adding SPI matrix to ADATA..."
-adata.obsp["SPI_mtx"] = dij
+# Add SpectralInference matrix to adata object
+@info "Adding SpectralInference matrix to ADATA..."
+adata.obsp["spectraldistances"] = dij
 adata.obs[:,"order"] = spitree.order
 adata.uns["cellmerges"] = spitree.merges
 adata.uns["heights"] = spitree.heights
