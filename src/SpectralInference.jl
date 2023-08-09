@@ -26,7 +26,7 @@ export spectraldistances,
 include("core.jl")
 
 export explainedvariance, scaledcumsum, 
-    minspaceneeded, spimtx_spaceneeded,
+    distancetrace_spaceneeded, distancematrix_spaceneeded,
     squareform
 include("helpers.jl")
 
