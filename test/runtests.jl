@@ -2,12 +2,8 @@ using SpectralInference
 using Test
 using Distributions
 
-@test isnothing(Base.get_extension(SpectralInference, :NewickTreeExt))
-using NewickTree
-@test !isnothing(Base.get_extension(SpectralInference, :NewickTreeExt))
-
-
-@testset "SpectralInference.jl core" begin
+@testset "SpectralInference" begin
+@testset "core" begin
     Dij_true = [
         0.0     2.0     5.3642  5.3642
         2.0     0.0     5.3642  5.3642
@@ -71,7 +67,7 @@ end
 
 
 
-@testset "SpectralInference.jl helpers" begin
+@testset "helpers.jl" begin
     expS = [
         10.0, 3.0, 3.0, 1., 1., 1., 0.,
     ]
@@ -79,12 +75,12 @@ end
     @test v ≈ (expS .^ 2) ./ sum((expS .^ 2))
     @test scaledcumsum(v) ≈ cumsum(v) ./ maximum(cumsum(v))
 
-    @test SpectralInference.minspaceneeded(100,100; bits=64) == "30.212 MiB"
-    @test SpectralInference.minspaceneeded(1000,1000; bits=64) == "29.773 GiB"
+    @test SpectralInference.distancetrace_spaceneeded(100,100; bits=64) == "30.212 MiB"
+    @test SpectralInference.distancetrace_spaceneeded(1000,1000; bits=64) == "29.773 GiB"
 
-    @test SpectralInference.spimtx_spaceneeded(100; bits=64) == "625.000 KiB"
-    @test SpectralInference.spimtx_spaceneeded(1000; bits=64) == "61.035 MiB"
-    @test SpectralInference.spimtx_spaceneeded(1000; bits=32) == "30.518 MiB"
+    @test SpectralInference.distancematrix_spaceneeded(100; bits=64) == "625.000 KiB"
+    @test SpectralInference.distancematrix_spaceneeded(1000; bits=64) == "61.035 MiB"
+    @test SpectralInference.distancematrix_spaceneeded(1000; bits=32) == "30.518 MiB"
 
     M = Float64.([
         0 1 0 1 1 1
@@ -119,7 +115,7 @@ end
     @test SpectralInference.ij2k(4,3,4) == 6
 end
 
-@testset "SpectralInference.jl empiricalMI" begin
+@testset "empiricalMI" begin
     
     x = [0, 0, 0, 1, 1, 1]
     for T in [Int64, Int32, Int16]
@@ -146,26 +142,34 @@ end
 
 end
 
-@testset "SpectralInference.jl NewickTreeExt" begin
-    m = rand(100, 40)
-    usv = svd(m)
-    dij = spectraldistances(usv.U, usv.S, getintervals(usv.S))
-    hc = UPGMA_tree(dij)
-    tree = readnw(newickstring(hc, string.(1:100)))
-    leafnames = getleafnames(tree)
-    @inferred network_distances(tree)
-    @inferred patristic_distances(tree)
-    @test fscore_precision_recall(tree, tree) == (1., 1., 1.)
-    @inferred cuttree(network_distance, tree, 0.)
-    @inferred Node collectiveLCA(getleaves(tree))
-    @inferred Node as_polytomy(n->NewickTree.support(n)<0.5, tree)
-    mi, treedepths = pairedMI_across_treedepth((;a=rand(Bool,100), b=rand([1,0], 100)), leafnames, tree; ncuts=50)
-    @test length(treedepths) == length(mi.a) == length(mi.b)
-    mi, treedepths = pairedMI_across_treedepth((;a=rand(UInt16,100), b=rand(Float64, 100)), leafnames, tree; ncuts=50, compare=(x,y)->abs(x-y))
-    @test length(treedepths) == length(mi.a) == length(mi.b)
-    @inferred spectral_lineage_encoding(tree)
-    @inferred spectral_lineage_encoding(tree, leafnames)
-    @inferred spectral_lineage_encoding(tree; filterfun=!isleaf)
-    @inferred spectral_lineage_encoding(tree, leafnames; filterfun=!isleaf)
-end
 
+if VERSION >= v"1.9"
+    @test isnothing(Base.get_extension(SpectralInference, :NewickTreeExt))
+    using NewickTree
+    @test !isnothing(Base.get_extension(SpectralInference, :NewickTreeExt))
+
+    @testset "NewickTreeExt" begin
+        m = rand(100, 40)
+        usv = svd(m)
+        dij = spectraldistances(usv.U, usv.S, getintervals(usv.S))
+        hc = UPGMA_tree(dij)
+        tree = readnw(newickstring(hc, string.(1:100)))
+        leafnames = getleafnames(tree)
+        @inferred network_distances(tree)
+        @inferred patristic_distances(tree)
+        @test fscore_precision_recall(tree, tree) == (1., 1., 1.)
+        @inferred cuttree(network_distance, tree, 0.)
+        @inferred Node collectiveLCA(getleaves(tree))
+        @inferred Node as_polytomy(n->NewickTree.support(n)<0.5, tree)
+        mi, treedepths = pairedMI_across_treedepth((;a=rand(Bool,100), b=rand([1,0], 100)), leafnames, tree; ncuts=50)
+        @test length(treedepths) == length(mi.a) == length(mi.b)
+        mi, treedepths = pairedMI_across_treedepth((;a=rand(UInt16,100), b=rand(Float64, 100)), leafnames, tree; ncuts=50, compare=(x,y)->abs(x-y))
+        @test length(treedepths) == length(mi.a) == length(mi.b)
+        @inferred spectral_lineage_encoding(tree)
+        @inferred spectral_lineage_encoding(tree, leafnames)
+        @inferred spectral_lineage_encoding(tree; filterfun=!isleaf)
+        @inferred spectral_lineage_encoding(tree, leafnames; filterfun=!isleaf)
+    end
+end # VERSION >= v"1.9"
+
+end # SpectralInference testset
