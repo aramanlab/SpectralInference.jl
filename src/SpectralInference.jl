@@ -38,6 +38,7 @@ include("parsephylip.jl")
 
 # extension functions
 export getleafnames,
+    getleafids,
     network_distance, 
     network_distances, 
     patristic_distance, 

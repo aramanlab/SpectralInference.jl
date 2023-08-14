@@ -165,10 +165,11 @@ if VERSION >= v"1.9"
         @test length(treedepths) == length(mi.a) == length(mi.b)
         mi, treedepths = pairedMI_across_treedepth((;a=rand(UInt16,100), b=rand(Float64, 100)), leafnames, tree; ncuts=50, compare=(x,y)->abs(x-y))
         @test length(treedepths) == length(mi.a) == length(mi.b)
+        leafids = getleafids(tree)
         @inferred spectral_lineage_encoding(tree)
-        @inferred spectral_lineage_encoding(tree, leafnames)
+        @inferred spectral_lineage_encoding(tree, leafids)
         @inferred spectral_lineage_encoding(tree; filterfun=!isleaf)
-        @inferred spectral_lineage_encoding(tree, leafnames; filterfun=!isleaf)
+        @inferred spectral_lineage_encoding(tree, sample(leafids, length(leafids), replace=false); filterfun=!isleaf)
     end
 end # VERSION >= v"1.9"
 

@@ -14,6 +14,14 @@ Get names of all the leafs with `t` as ancester
 """
 SpectralInference.getleafnames(t::Node) = name.(getleaves(t))
 
+"""
+    getleafids(t::NewickTree.Node)
+
+Get IDs of all the leafs with `t` as ancester
+"""
+SpectralInference.getleafids(t::Node) = id.(getleaves(t))
+
+
 # how to delete a newick tree node
 function Base.delete!(n::Node)
     p = parent(n)
@@ -262,15 +270,14 @@ end
 returns vector of named tuples with the id `nodeid` of the node and `sle` a vector of booleans
 ordered by `orderedleafnames` where true indicates the leaf descends from the node and false indicates that it does not.
 """
-function SpectralInference.spectral_lineage_encoding(tree::Node, orderedleafnames=getleafnames(tree); filterfun=x->true)
+function SpectralInference.spectral_lineage_encoding(tree::Node, orderedleafids=getleafids(tree); filterfun=x->true)
     map(filter(filterfun, prewalk(tree))) do node
-        tmp = falses(length(orderedleafnames))
-        tmp[indexin(getleafnames(node), orderedleafnames)] .= true
+        tmp = falses(length(orderedleafids))
+        tmp[indexin(getleafids(node), orderedleafids)] .= true
         nodeid = id(node)
         (;nodeid, sle=tmp)
     end
 end
-
 """
     pairedMI_across_treedepth(metacolumns, metacolumns_ids, tree)
     pairedMI_across_treedepth(metacolumns, metacolumns_ids, compare::Function=(==), tree::Node; ncuts=100, bootstrap=false, mask=nothing)
@@ -356,10 +363,11 @@ using PrecompileTools
             as_polytomy(n->NewickTree.support(n)<0.5, tree)
             mi, treedepths = pairedMI_across_treedepth((;a=rand(Bool,N), b=rand([1,0], N)), leafnames, tree; ncuts=5)
             mi, treedepths = pairedMI_across_treedepth((;a=rand(UInt16,N), b=rand(Float64, N)), leafnames, tree; ncuts=5, compare=(x,y)->abs(x-y))
+            leafids=getleafids(tree)
             spectral_lineage_encoding(tree)
-            spectral_lineage_encoding(tree, leafnames)
+            spectral_lineage_encoding(tree, leafids)
             spectral_lineage_encoding(tree; filterfun=!isleaf)
-            spectral_lineage_encoding(tree, leafnames; filterfun=!isleaf)
+            spectral_lineage_encoding(tree, leafids; filterfun=!isleaf)
         end
     end
 end

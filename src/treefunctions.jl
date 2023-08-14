@@ -1,6 +1,8 @@
 # function definitions are in extensions for various backends of tree implementations
 """ returns names of all leaves desended from a node in prewalk order """
 function getleafnames end
+""" returns ids of all leaves desended from a node in prewalk order """
+function getleafids end
 """ 
     network_distance(leaf_i, leaf_j) 
 returns network distance between two leaves 
