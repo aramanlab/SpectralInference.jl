@@ -36,6 +36,11 @@ return vector of nodes whose distance from the root are < θ and whose children'
 """
 function cuttree end
 """
+    mapnodes(f::Function, tree)
+maps across all nodes that have children in prewalk order and applies function `f(node)`
+"""
+function mapnodes end
+"""
     mapinternalnodes(f::Function, tree)
 maps across all nodes that have children in prewalk order and applies function `f(node)`
 """
