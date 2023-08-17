@@ -17,11 +17,11 @@ Returns:
 
 """
 function getintervals(S::AbstractVector{<:Number}; alpha=1.0, q=0.5)
-    potentialbreaks = abs.(diff(log.(S.+1)))
+    potentialbreaks = abs.(diff(log.(S .+ 1)))
     θ = alpha * quantile(potentialbreaks, q)
     breaks = findall(potentialbreaks .> θ) .+ 1
-    starts, ends = vcat(1, breaks), vcat(breaks.-1, length(S))
-    intervals = map((s,e)->s:e, starts, ends)
+    starts, ends = vcat(1, breaks), vcat(breaks .- 1, length(S))
+    intervals = map((s, e) -> s:e, starts, ends)
     return intervals
 end
 
@@ -43,13 +43,13 @@ Returns:
 * AbstractVector{UnitRange} indices into S corresponding to the spectral partitions
 
 """
-function getintervalsIQR(S::AbstractVector{<:Number}; alpha=1.5, ql=.25, qh=.75)
-    potentialbreaks = abs.(diff(log.(S.+1)))
+function getintervalsIQR(S::AbstractVector{<:Number}; alpha=1.5, ql=0.25, qh=0.75)
+    potentialbreaks = abs.(diff(log.(S .+ 1)))
     Q1, Q3 = quantile(potentialbreaks, [ql, qh])
     θ = Q3 + alpha * (Q3 - Q1)
     breaks = findall(potentialbreaks .> θ) .+ 1
-    starts, ends = vcat(1, breaks), vcat(breaks.-1, length(S))
-    intervals = map((s,e)->s:e, starts, ends)
+    starts, ends = vcat(1, breaks), vcat(breaks .- 1, length(S))
+    intervals = map((s, e) -> s:e, starts, ends)
     return intervals
 end
 
@@ -77,23 +77,23 @@ Returns:
 function spectraldistances(A::AbstractMatrix{<:Number}; onrows=true::Bool, alpha=ALPHA, q=QUANT)
     spectraldistances(svd(A); onrows, alpha, q)
 end
-function spectraldistances(usv::SVD; onrows=true::Bool, alpha=ALPHA, q=QUANT) 
+function spectraldistances(usv::SVD; onrows=true::Bool, alpha=ALPHA, q=QUANT)
     if onrows
         spectraldistances(usv.U, usv.S; alpha, q)
     else
         spectraldistances(usv.V, usv.S; alpha, q)
     end
 end
-function spectraldistances(vecs::AbstractMatrix{<:T}, vals::AbstractVector{<:T}; alpha=ALPHA, q=QUANT) where T<:Number
+function spectraldistances(vecs::AbstractMatrix{<:T}, vals::AbstractVector{<:T}; alpha=ALPHA, q=QUANT) where {T<:Number}
     intervals = getintervals(vals; alpha, q)
     spectraldistances(vecs, vals, intervals)
 end
-function spectraldistances(vecs::AbstractMatrix{<:T}, vals::AbstractVector{<:T}, intervals::AbstractVector) where T<:Number
-    spimtx = zeros(size(vecs,1), size(vecs,1))
+function spectraldistances(vecs::AbstractMatrix{<:T}, vals::AbstractVector{<:T}, intervals::AbstractVector) where {T<:Number}
+    spimtx = zeros(size(vecs, 1), size(vecs, 1))
     for grp in intervals
-        spimtx += Distances.pairwise(WeightedEuclidean(vals[grp]), vecs'[grp,:]; dims=2)
+        spimtx += Distances.pairwise(WeightedEuclidean(vals[grp]), vecs'[grp, :]; dims=2)
     end
-    return spimtx.^2
+    return spimtx .^ 2
 end
 
 
@@ -128,15 +128,15 @@ function spectraldistances_trace(usv::SVD; onrows=true, groups=nothing, alpha=AL
 end
 
 function spectraldistances_trace(vecs, vals, groups)
-    Nsmps = size(vecs,1)
+    Nsmps = size(vecs, 1)
     r = zeros(length(groups), binomial(Nsmps, 2))
     spectraldistances_trace!(r, vecs, vals, groups)
     return r
 end
 
 function spectraldistances_trace!(r, vecs, vals, groups)
-    Nsmps = size(vecs,1)
-    for (k,(i,j)) in enumerate(((i, j) for j in 1:Nsmps for i in (j+1):Nsmps))
+    Nsmps = size(vecs, 1)
+    for (k, (i, j)) in enumerate(((i, j) for j in 1:Nsmps for i in (j+1):Nsmps))
         for (g, grp) in enumerate(groups)
             r[g, k] = WeightedEuclidean(vals[grp])(vecs'[grp, i], vecs'[grp, j])
         end
@@ -158,7 +158,7 @@ projectinLSV(data::AbstractArray, usv::SVD, window) = data * usv.V[:, window] * 
 returns estimated transposed right singular vectors (RSV or V̂ᵗ) for new data based on already calculated SVD factorization
 """
 projectinRSV(data::AbstractArray, usv::SVD) = inv(diagm(usv.S)) * usv.U' * data
-projectinRSV(data::AbstractArray, usv::SVD, window) = inv(diagm(usv.S[window])) * usv.U'[window,:] * data
+projectinRSV(data::AbstractArray, usv::SVD, window) = inv(diagm(usv.S[window])) * usv.U'[window, :] * data
 
 """
     projectout(usv::SVD, [window])
@@ -176,7 +176,7 @@ projectout(usv::SVD, window) = usv.U[:, window] * diagm(usv.S[window]) * usv.Vt[
 
 shorthand for `Clustering.hclust(Dij, linkage=:average, branchorder=:optimal)`
 """
-function UPGMA_tree(Dij::AbstractMatrix{<:Number}) 
+function UPGMA_tree(Dij::AbstractMatrix{<:Number})
     Clustering.hclust(Dij, linkage=:average, branchorder=:optimal)
 end
 
@@ -222,25 +222,25 @@ function newickstring(hc::Hclust, tiplabels::AbstractVector{<:AbstractString}; l
     _newickstring(view(hc.merges, :, :), view(hc.heights, :), r, r, view(tiplabels, :); labelinternalnodes) * ";"
 end
 function _newickstring(merges::A, heights::B, i::C, p::C, tiplabels::D; labelinternalnodes=false)::String where {
-        A<:AbstractArray{<:Integer}, B<:AbstractVector{<:AbstractFloat},
-        C<:Integer, D<:AbstractVector{<:AbstractString}
-    }
-    j::Int64 = merges[i,1] # left subtree pointer
-    k::Int64 = merges[i,2] # right subtree pointer
+    A<:AbstractArray{<:Integer},B<:AbstractVector{<:AbstractFloat},
+    C<:Integer,D<:AbstractVector{<:AbstractString}
+}
+    j::Int64 = merges[i, 1] # left subtree pointer
+    k::Int64 = merges[i, 2] # right subtree pointer
     a::String = if j < 0 # if tip format tip
-            tiplabels[abs(j)] * ':' * @sprintf("%e", heights[i])
-        else # recurse and format internal node
-            _newickstring(view(merges, :, :), view(heights, :), j, i, view(tiplabels, :); labelinternalnodes)
-        end
+        tiplabels[abs(j)] * ':' * @sprintf("%e", heights[i])
+    else # recurse and format internal node
+        _newickstring(view(merges, :, :), view(heights, :), j, i, view(tiplabels, :); labelinternalnodes)
+    end
     b::String = if k < 0 # if tip format tip
-            tiplabels[abs(k)] * ':' * @sprintf("%e", heights[i])
-        else # recurse and format internal node
-            _newickstring(view(merges, :, :), view(heights, :), k, i, view(tiplabels, :); labelinternalnodes)
-        end
+        tiplabels[abs(k)] * ':' * @sprintf("%e", heights[i])
+    else # recurse and format internal node
+        _newickstring(view(merges, :, :), view(heights, :), k, i, view(tiplabels, :); labelinternalnodes)
+    end
     nid = labelinternalnodes ? "node" * string(length(heights) + i + 1) : ""
     dist = @sprintf("%e", heights[p] - heights[i])
-    _newick_merge_strings(a,b,nid,dist)
+    _newick_merge_strings(a, b, nid, dist)
 end
-function _newick_merge_strings(a::S, b::S, n::S, d::S) where S<:String
-    '(' *  a *  ',' * b * ')' * n * ':' * d
+function _newick_merge_strings(a::S, b::S, n::S, d::S) where {S<:String}
+    '(' * a * ',' * b * ')' * n * ':' * d
 end

@@ -13,10 +13,10 @@ function readphylip(fn::AbstractString)
             push!(smps, smp)
             push!(seqs, seq)
         end
-        all(s->length(s)==nfeat, seqs) || throw(DimensionMismatch("Length of all sequences must be the equal"))
+        all(s -> length(s) == nfeat, seqs) || throw(DimensionMismatch("Length of all sequences must be the equal"))
         return smps, seqs
     end
-    return (;smps, seqs)
+    return (; smps, seqs)
 end # read phylip
 
 

@@ -19,7 +19,7 @@ Args:
 Returns:
 * MI
 """
-function empiricalMI(a::AbstractVector{T}, b::AbstractVector{T}; nbins=50, base=ℯ, normalize=false) where T<:AbstractFloat
+function empiricalMI(a::AbstractVector{T}, b::AbstractVector{T}; nbins=50, base=ℯ, normalize=false) where {T<:AbstractFloat}
 
     # num samples marginal then total
     N = length(a)
@@ -33,7 +33,7 @@ function empiricalMI(a::AbstractVector{T}, b::AbstractVector{T}; nbins=50, base=
     # frequency
     afreq = vec((a_counts) ./ (N))
     bfreq = vec((b_counts) ./ (N))
-    abfreq =  vec((ab_counts) ./ (N))
+    abfreq = vec((ab_counts) ./ (N))
 
     Δ_a = breaks_a[2] - breaks_a[1]
     Δ_b = breaks_b[2] - breaks_b[1]
@@ -45,13 +45,13 @@ function empiricalMI(a::AbstractVector{T}, b::AbstractVector{T}; nbins=50, base=
 
     # mi
     mi = ha + hb - hab
-    mi = normalize ? 2mi / (ha+hb) : mi
+    mi = normalize ? 2mi / (ha + hb) : mi
     # return (mi = mi, ha = ha, hb = hb, hab = hab)
     return mi
 end
 
 # value grouped by binary catagory
-function empiricalMI(ab::AbstractVector{F}, mask::M; nbins=100, base=ℯ, normalize=false) where {F <: Number, M <: Union{BitVector, AbstractVector{<:Bool}}}
+function empiricalMI(ab::AbstractVector{F}, mask::M; nbins=100, base=ℯ, normalize=false) where {F<:Number,M<:Union{BitVector,AbstractVector{<:Bool}}}
     length(ab) == length(mask) ||
         throw(ArgumentError("length of vals and meta must match; got vals=$(length(vals)), meta=$(length(meta))"))
     # num samples marginal then total
@@ -60,7 +60,7 @@ function empiricalMI(ab::AbstractVector{F}, mask::M; nbins=100, base=ℯ, normal
     mask = Bool.(mask)
     # if mask is not grouping than there is no added information
     Na > 0 && Nb > 0 || return mi = 0.0
-    
+
     ## otherwise ##
 
     # form edges
@@ -72,12 +72,12 @@ function empiricalMI(ab::AbstractVector{F}, mask::M; nbins=100, base=ℯ, normal
     ab_counts = a_counts .+ b_counts
 
     # get binwidth
-    Δ = edges[2]-edges[1]
+    Δ = edges[2] - edges[1]
 
     # frequency
-    afreq = vec((a_counts)./(Na)) #Δ/Δ
-    bfreq = vec((b_counts)./(Nb)) #Δ/Δ
-    abfreq =  vec((ab_counts)./(N)) #Δ/Δ
+    afreq = vec((a_counts) ./ (Na)) #Δ/Δ
+    bfreq = vec((b_counts) ./ (Nb)) #Δ/Δ
+    abfreq = vec((ab_counts) ./ (N)) #Δ/Δ
 
     # approx entropy
     ha = entropy(afreq, base) + log(base, Δ)
@@ -85,37 +85,37 @@ function empiricalMI(ab::AbstractVector{F}, mask::M; nbins=100, base=ℯ, normal
     hab = entropy(abfreq, base) + log(base, Δ)
 
     # mi
-    mi = hab - (Na/N*ha + Nb/N*hb) # original had flipped signs
+    mi = hab - (Na / N * ha + Nb / N * hb) # original had flipped signs
     # return (mi = mi, ha = ha, hb = hb, hab = hab)
-    mi = normalize ? 2mi / (ha+hb) : mi
+    mi = normalize ? 2mi / (ha + hb) : mi
     return mi
 end
 
 # value grouped by multiple categories
-function empiricalMI(a::AbstractVector{V}, b::AbstractVector{M}; nbins=100, kwargs...) where 
-    {V <: AbstractFloat,  M <: AbstractString}
-    
+function empiricalMI(a::AbstractVector{V}, b::AbstractVector{M}; nbins=100, kwargs...) where
+{V<:AbstractFloat,M<:AbstractString}
+
     binned_a, a_bw = _bin_numbers(a, nbins)
     empiricalMI(binned_a, b; bw_a=a_bw, kwargs...)
 end
 
 # discrete catagories
 empiricalMI(a::BitVector, b::BitVector; kwargs...) = empiricalMI(Int.(a), Int.(b); kwargs...)
-function empiricalMI(a::AbstractVector{T}, b::AbstractVector{T}; bw_a=1., bw_b=1., base=ℯ, normalize=false) where 
-    {T <: Union{Integer,AbstractString}}
-    
+function empiricalMI(a::AbstractVector{T}, b::AbstractVector{T}; bw_a=1.0, bw_b=1.0, base=ℯ, normalize=false) where
+{T<:Union{Integer,AbstractString}}
+
     counts = freqtable(a, b)
     N = sum(counts)
-    Ha = entropy(sum(counts, dims=2)./N, base) + log(base, bw_a)
-    Hb = entropy(sum(counts, dims=1)./N, base) + log(base, bw_b)
-    Hab = entropy(counts./N, base) + log(base, bw_a * bw_b)
+    Ha = entropy(sum(counts, dims=2) ./ N, base) + log(base, bw_a)
+    Hb = entropy(sum(counts, dims=1) ./ N, base) + log(base, bw_b)
+    Hab = entropy(counts ./ N, base) + log(base, bw_a * bw_b)
     mi = Ha + Hb - Hab
-    mi = normalize ? 2mi / (Ha+Hb) : mi
+    mi = normalize ? 2mi / (Ha + Hb) : mi
 end
 
 
-_bin_numbers(v::AbstractVector{<:AbstractString}, nbins) = v, 1.
-_bin_numbers(v::AbstractVector{<:Integer}, nbins) = string.(v), 1.
+_bin_numbers(v::AbstractVector{<:AbstractString}, nbins) = v, 1.0
+_bin_numbers(v::AbstractVector{<:Integer}, nbins) = string.(v), 1.0
 function _bin_numbers(v::AbstractVector{<:Number}, nbins)
     breaks = range(minimum(v), maximum(v), length=nbins)
     delta = breaks[2] - breaks[1]
@@ -141,22 +141,22 @@ Citation:
  Language Learning (EMNLP-CoNLL) (Association for Computational Linguistics,
   Prague, Czech Republic, 2007; https://aclanthology.org/D07-1043), pp. 410–420.
 """
-function vmeasure_homogeneity_completeness(labels_true, labels_pred; β=1.)
+function vmeasure_homogeneity_completeness(labels_true, labels_pred; β=1.0)
     if length(labels_true) == 0
         return 1.0, 1.0, 1.0
     end
 
     N = length(labels_true)
-    entropy_C = entropy(freqtable(labels_true)./N)
-    entropy_K = entropy(freqtable(labels_pred)./N)
-    entropy_CK = entropy(freqtable(labels_true, labels_pred)./N)
+    entropy_C = entropy(freqtable(labels_true) ./ N)
+    entropy_K = entropy(freqtable(labels_pred) ./ N)
+    entropy_CK = entropy(freqtable(labels_true, labels_pred) ./ N)
 
     MI = entropy_C + entropy_K - entropy_CK
 
-    homogeneity = entropy_C != 0. ? (MI / entropy_C) : 1.0
-    completeness = entropy_K != 0. ? (MI / entropy_K) : 1.0
+    homogeneity = entropy_C != 0.0 ? (MI / entropy_C) : 1.0
+    completeness = entropy_K != 0.0 ? (MI / entropy_K) : 1.0
 
-    if homogeneity + completeness == 0.
+    if homogeneity + completeness == 0.0
         v_measure_score = 0.0
     else
         v_measure_score = (
@@ -192,8 +192,8 @@ function adjustedrandindex(a::AbstractVector{<:Number}, b::AbstractVector{<:Numb
     a_pairs = sum(binomial.(a_counts, 2))
     b_pairs = sum(binomial.(b_counts, 2))
     possiblepairs = binomial(N, 2)
-    expectedpairs = a_pairs*b_pairs/possiblepairs
+    expectedpairs = a_pairs * b_pairs / possiblepairs
 
     # calculate ARI
-    return (contingentpairs - expectedpairs) / ((a_pairs + b_pairs)/2 - expectedpairs) # ARI
+    return (contingentpairs - expectedpairs) / ((a_pairs + b_pairs) / 2 - expectedpairs) # ARI
 end

@@ -15,17 +15,17 @@ using CategoricalArrays: cut
 const ALPHA = 1.0
 const QUANT = 0.5
 
-export spectraldistances, 
-    spectraldistances_trace, 
+export spectraldistances,
+    spectraldistances_trace,
     spectralcorrelations,
-    getintervalsIQR, 
-    getintervals, 
-    projectinLSV, projectinRSV, projectout, 
+    getintervalsIQR,
+    getintervals,
+    projectinLSV, projectinRSV, projectout,
     UPGMA_tree,
     newickstring
 include("core.jl")
 
-export explainedvariance, scaledcumsum, 
+export explainedvariance, scaledcumsum,
     distancetrace_spaceneeded, distancematrix_spaceneeded,
     squareform
 include("helpers.jl")
@@ -39,19 +39,19 @@ include("parsephylip.jl")
 # extension functions
 export getleafnames,
     getleafids,
-    network_distance, 
-    network_distances, 
-    patristic_distance, 
+    network_distance,
+    network_distances,
+    patristic_distance,
     patristic_distances,
-    fscore_precision_recall, 
+    fscore_precision_recall,
     cuttree,
     mapnodes,
-    mapinternalnodes, 
-    maplocalnodes, 
+    mapinternalnodes,
+    maplocalnodes,
     collectiveLCA,
-    as_polytomy, 
+    as_polytomy,
     as_polytomy!,
-    pairedMI_across_treedepth, 
+    pairedMI_across_treedepth,
     clusters_per_cutlevel,
     ladderize!,
     spectral_lineage_encoding
