@@ -1,7 +1,7 @@
 name = "SpectralInference"
 uuid = "a959a40c-7f6b-448f-a4b7-059cce266d3c"
 authors = ["Benjamin Doran and collaborators"]
-version = "0.4.0"
+version = "0.4.1"
 
 [deps]
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
@@ -12,6 +12,7 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [weakdeps]
@@ -28,6 +29,7 @@ Distributions = "0.25"
 FreqTables = "0.4"
 PrecompileTools = "1"
 Reexport = "1"
+SparseArrays = "1.10"
 StatsBase = "0.33, 0.34"
 julia = "1"
 
