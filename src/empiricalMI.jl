@@ -1,7 +1,8 @@
 ### MI functions ###
 
 """
-    empiricalMI(a::AbstractVector{<:Float}, b::AbstractVector{<:Float}[, nbins=50, normalize=false])
+    empiricalMI(a::AbstractVector{<:Float}, b::AbstractVector{<:Float}[; nbins=50, edges_a=nothing, edges_b=nothing, normalize=false])
+    empiricalMI(ab::AbstractVector{F}, mask::AbstractVector{<:Bool}[; nbins=100, edges=nothing, base=ℯ, normalize=false])
 
 computes empirical MI from identity of ``H(a) + H(b) - H(a,b)``. where
 ``H := -sum(p(x)*log(p(x))) + log(Δ)``
@@ -13,20 +14,26 @@ Args:
 * a, vecter of length N
 * b, AbstractVector of length N
 * nbins, number of bins per side, use 1000 < nbins^2 < length(a) for best results
+* edges_a, defaults to `nothing`. If provided is used as the breaks defining bins for `a`, `nbins` will be ignored
+* edges_b, defaults to `nothing`. If provided is used as the breaks defining bins for `b`, `nbins` will be ignored
 * base, base unit of MI (defaults to nats with base=ℯ)
 * normalize, bool, whether to normalize with mi / mean(ha, hb)
 
 Returns:
 * MI
 """
-function empiricalMI(a::AbstractVector{T}, b::AbstractVector{T}; nbins=50, base=ℯ, normalize=false) where {T<:AbstractFloat}
+function empiricalMI(a::AbstractVector{T}, b::AbstractVector{T}; nbins=50, edges_a=nothing, edges_b=nothing,  base=ℯ, normalize=false) where {T<:AbstractFloat}
 
     # num samples marginal then total
     N = length(a)
-    breaks_a = range(minimum(a), maximum(a), length=nbins)
-    breaks_b = range(minimum(b), maximum(b), length=nbins)
+    if isnothing(edges_a)
+        edges_a = range(minimum(a), maximum(a), length=nbins)
+    end
+    if isnothing(edges_b)
+        edges_b = range(minimum(b), maximum(b), length=nbins)
+    end
 
-    ab_counts = fit(Histogram, (a, b), (breaks_a, breaks_b)).weights
+    ab_counts = fit(Histogram, (a, b), (edges_a, edges_b)).weights
     a_counts = sum(ab_counts; dims=1)
     b_counts = sum(ab_counts; dims=2)
 
@@ -35,8 +42,8 @@ function empiricalMI(a::AbstractVector{T}, b::AbstractVector{T}; nbins=50, base=
     bfreq = vec((b_counts) ./ (N))
     abfreq = vec((ab_counts) ./ (N))
 
-    Δ_a = breaks_a[2] - breaks_a[1]
-    Δ_b = breaks_b[2] - breaks_b[1]
+    Δ_a = edges_a[2] - edges_a[1]
+    Δ_b = edges_b[2] - edges_b[1]
 
     # approx entropy
     ha = entropy(afreq, base) + log(base, Δ_a)
@@ -51,7 +58,7 @@ function empiricalMI(a::AbstractVector{T}, b::AbstractVector{T}; nbins=50, base=
 end
 
 # value grouped by binary catagory
-function empiricalMI(ab::AbstractVector{F}, mask::M; nbins=100, base=ℯ, normalize=false) where {F<:Number,M<:Union{BitVector,AbstractVector{<:Bool}}}
+function empiricalMI(ab::AbstractVector{F}, mask::M; nbins=100, edges=nothing, base=ℯ, normalize=false) where {F<:Number,M<:Union{BitVector,AbstractVector{<:Bool}}}
     length(ab) == length(mask) ||
         throw(ArgumentError("length of vals and meta must match; got vals=$(length(vals)), meta=$(length(meta))"))
     # num samples marginal then total
@@ -64,7 +71,9 @@ function empiricalMI(ab::AbstractVector{F}, mask::M; nbins=100, base=ℯ, normal
     ## otherwise ##
 
     # form edges
-    edges = range(minimum(ab), maximum(ab), length=nbins)
+    if isnothing(edges)
+        edges = range(minimum(ab), maximum(ab), length=nbins)
+    end
 
     # fit hist and get counts
     a_counts = fit(Histogram, ab[mask], edges).weights
