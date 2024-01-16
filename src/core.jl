@@ -185,7 +185,7 @@ end
     calc_spcorr_mtx(vecs::AbstractMatrix{<:Number}, window)
     calc_spcorr_mtx(vecs::AbstractMatrix{<:Number}, vals::AbstractVector{<:Number}, window)
 
-Calculates pairwise spectral (pearson) correlations for a set of observations. 
+Calculates pairwise spectral (spearman) correlations for a set of observations. 
 
 Args:
 * vecs: set of left or right singular vectors with observations/features on rows and spectral components on columns
@@ -196,11 +196,11 @@ Returns:
 * correlation matrix where each pixel is the correlation between a pair of observations
 """
 function spectralcorrelations(vecs::AbstractMatrix{<:Number}, window)
-    cor(vecs[:, window]')
+    corspearman(vecs[:, window]')
 end
 function spectralcorrelations(vecs::AbstractMatrix{<:Number}, vals::AbstractVector{<:Number}, window)
     contributions = vecs[:, window] * diagm(vals[window])
-    cor(contributions')
+    corspearman(contributions')
 end
 
 """ 
