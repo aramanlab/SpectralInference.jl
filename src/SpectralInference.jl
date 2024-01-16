@@ -1,7 +1,7 @@
 module SpectralInference
 
 using Reexport
-using StatsBase: indicatormat, quantile, cor, fit, Histogram, entropy
+using StatsBase: indicatormat, quantile, cor, corspearman, fit, Histogram, entropy
 using Distances: Distances, WeightedEuclidean
 using Clustering: Clustering, hclust, Hclust
 using SparseArrays: sparse
